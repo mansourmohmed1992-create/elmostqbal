@@ -1,0 +1,6 @@
+{
+  "users": [
+    { "id": "admin", "email": "admin@elmostaqbal-lab.com", "password": "admin123", "role": "ADMIN" }
+  ],
+  "tests": []
+}
