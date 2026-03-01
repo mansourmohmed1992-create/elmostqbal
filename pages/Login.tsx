@@ -139,8 +139,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <input
                       type="text"
                       required
-                      className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800 placeholder-transparent"
-                      placeholder="اسم المستخدم"
+                      className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       onFocus={() => setFocusedField('username')}
@@ -165,8 +164,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      className="w-full pr-16 pl-12 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800 placeholder-transparent"
-                      placeholder="كلمة المرور"
+                      className="w-full pr-16 pl-12 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       onFocus={() => setFocusedField('password')}
