@@ -9,7 +9,8 @@ import {
   CheckCircle,
   BarChart,
   UsersIcon,
-  ShieldCheck
+  ShieldCheck,
+  Plus
 } from 'lucide-react';
 
 interface User {
@@ -54,12 +55,85 @@ const AdminDashboard: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showAddEmployee, setShowAddEmployee] = useState(false);
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [employeeForm, setEmployeeForm] = useState({ fullName: '', email: '', password: '', phone: '', role: 'EMPLOYEE' });
+  const [customerForm, setCustomerForm] = useState({ fullName: '', phone: '', age: '', address: '' });
 
-  // (Add employee feature removed)
+  // add-employee removed
 
   useEffect(() => {
     fetchAllData();
   }, []);
+
+  const handleAddEmployee = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!employeeForm.fullName || !employeeForm.phone || !employeeForm.password) {
+      setError('يرجى ملء جميع الحقول');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:4000/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: employeeForm.fullName,
+          email: employeeForm.email || `${employeeForm.fullName}@lab.com`,
+          phone: employeeForm.phone,
+          password: employeeForm.password,
+          role: employeeForm.role
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setSuccess('تم إضافة الموظف بنجاح');
+        setEmployeeForm({ fullName: '', email: '', password: '', phone: '', role: 'EMPLOYEE' });
+        setShowAddEmployee(false);
+        await fetchAllData();
+      } else {
+        setError(data.error || 'فشل إضافة الموظف');
+      }
+    } catch (err) {
+      setError('خطأ في الاتصال بالخادم');
+      console.error(err);
+    }
+  };
+
+  const handleAddCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customerForm.fullName || !customerForm.phone || !customerForm.age || !customerForm.address) {
+      setError('يرجى ملء جميع الحقول');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:4000/api/admin/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: customerForm.fullName,
+          phone: customerForm.phone,
+          age: parseInt(customerForm.age),
+          address: customerForm.address
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setSuccess('تم إضافة العميل بنجاح');
+        setCustomerForm({ fullName: '', phone: '', age: '', address: '' });
+        setShowAddCustomer(false);
+        await fetchAllData();
+      } else {
+        setError(data.error || 'فشل إضافة العميل');
+      }
+    } catch (err) {
+      setError('خطأ في الاتصال بالخادم');
+      console.error(err);
+    }
+  };
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -195,7 +269,65 @@ const AdminDashboard: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+            <button
+              onClick={() => setShowAddEmployee(!showAddEmployee)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 whitespace-nowrap transition-colors"
+            >
+              <Plus size={20} />
+              إضافة موظف
+            </button>
           </div>
+
+          {showAddEmployee && (
+            <form onSubmit={handleAddEmployee} className="bg-white p-6 rounded-lg shadow mb-6 space-y-4">
+              <h3 className="font-bold text-lg text-gray-800">إضافة موظف جديد</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="الاسم الرباعي"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={employeeForm.fullName}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, fullName: e.target.value })}
+                  required
+                />
+                <input
+                  type="email"
+                  placeholder="البريد الإلكتروني (اختياري)"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={employeeForm.email}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })}
+                />
+                <input
+                  type="tel"
+                  placeholder="رقم الهاتف"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={employeeForm.phone}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, phone: e.target.value })}
+                  required
+                />
+                <input
+                  type="password"
+                  placeholder="كلمة المرور"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={employeeForm.password}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, password: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold transition-colors">
+                  حفظ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddEmployee(false)}
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-lg font-bold transition-colors"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          )}
 
           <div className="grid gap-4">
             {filteredUsers.map(user => (
@@ -246,7 +378,66 @@ const AdminDashboard: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+            <button
+              onClick={() => setShowAddCustomer(!showAddCustomer)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 whitespace-nowrap transition-colors"
+            >
+              <Plus size={20} />
+              إضافة عميل
+            </button>
           </div>
+
+          {showAddCustomer && (
+            <form onSubmit={handleAddCustomer} className="bg-white p-6 rounded-lg shadow mb-6 space-y-4">
+              <h3 className="font-bold text-lg text-gray-800">إضافة عميل جديد</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="الاسم الرباعي"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={customerForm.fullName}
+                  onChange={(e) => setCustomerForm({ ...customerForm, fullName: e.target.value })}
+                  required
+                />
+                <input
+                  type="tel"
+                  placeholder="رقم الهاتف (واتس)"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={customerForm.phone}
+                  onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
+                  required
+                />
+                <input
+                  type="number"
+                  placeholder="السن"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={customerForm.age}
+                  onChange={(e) => setCustomerForm({ ...customerForm, age: e.target.value })}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="العنوان"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={customerForm.address}
+                  onChange={(e) => setCustomerForm({ ...customerForm, address: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold transition-colors">
+                  حفظ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddCustomer(false)}
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-lg font-bold transition-colors"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          )}
 
           <div className="grid gap-4">
             {filteredCustomers.map(customer => (
