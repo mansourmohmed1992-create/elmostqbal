@@ -58,6 +58,7 @@ const AdminDashboard: React.FC = () => {
 
   // Form states for adding employee
   const [formData, setFormData] = useState({
+    username: '',
     fullName: '',
     email: '',
     password: '',
@@ -98,8 +99,8 @@ const AdminDashboard: React.FC = () => {
     setError('');
     setSuccess('');
 
-    if (!formData.fullName || !formData.email || !formData.password || !formData.phone) {
-      setError('جميع الحقول مطلوبة');
+    if (!formData.username || !formData.fullName || !formData.password || !formData.phone) {
+      setError('جميع الحقول المطلوبة: اسم المستخدم، الاسم الرباعي، كلمة المرور، رقم الهاتف');
       return;
     }
 
@@ -114,7 +115,7 @@ const AdminDashboard: React.FC = () => {
 
       if (response.ok && data.success) {
         setSuccess(`تم إضافة ${formData.role === 'EMPLOYEE' ? 'الموظف' : 'الإدارة'} بنجاح`);
-        setFormData({ fullName: '', email: '', password: '', phone: '', role: 'EMPLOYEE' });
+        setFormData({ username: '', fullName: '', email: '', password: '', phone: '', role: 'EMPLOYEE' });
         await fetchAllData();
       } else {
         setError(data.error || 'فشل الإضافة');
@@ -267,6 +268,16 @@ const AdminDashboard: React.FC = () => {
           <form onSubmit={handleAddEmployee} className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
+                <label className="block text-gray-700 font-bold mb-2">اسم المستخدم</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                />
+              </div>
+              <div>
                 <label className="block text-gray-700 font-bold mb-2">الاسم الرباعي</label>
                 <input
                   type="text"
@@ -277,10 +288,9 @@ const AdminDashboard: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-gray-700 font-bold mb-2">البريد الإلكتروني</label>
+                <label className="block text-gray-700 font-bold mb-2">البريد الإلكتروني (اختياري)</label>
                 <input
                   type="email"
-                  required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}

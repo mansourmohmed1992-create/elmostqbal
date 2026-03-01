@@ -89,6 +89,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          username: username.trim(),
           fullName: username.trim(),
           phone: phone.trim(),
           age: parseInt(age),
@@ -130,17 +131,20 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     
     const cleanUser = username.trim();
     
-    // تحويل اسم المستخدم إلى صيغة بريد إلكتروني
-    // إذا كان "admin" → "admin@elmostaqbal-lab.com"
-    let userEmail = cleanUser;
-    
-    // إذا لم يحتوي على @ فهو username وليس email
-    if (!cleanUser.includes('@')) {
-      userEmail = `${cleanUser}@elmostaqbal-lab.com`;
+    if (!cleanUser) {
+      setError('أدخل اسم المستخدم');
+      setLoading(false);
+      return;
     }
     
-    // استخدام نظام Smart Login (Auto-Create للعملاء الجدد)
-    const result = await smartLogin(userEmail, password);
+    if (!password) {
+      setError('أدخل كلمة المرور');
+      setLoading(false);
+      return;
+    }
+    
+    // استخدام نظام Smart Login مع username
+    const result = await smartLogin(cleanUser, password);
     
     if (result.success && result.user) {
       // تحديد الدور من النتيجة
@@ -152,15 +156,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       
       const userRole = roleMapping[result.role || 'CLIENT'] || UserRole.CLIENT;
       
-      const displayName = result.isNewUser 
-        ? `${cleanUser} (حساب جديد)`
-        : result.user?.displayName || cleanUser;
+      const displayName = result.user?.fullName || cleanUser;
       
       onLogin({
-        id: result.user?.uid,
+        id: result.user?.id,
         name: displayName,
         username: cleanUser,
-        email: userEmail,
+        email: result.user?.email,
         role: userRole,
         isNewUser: result.isNewUser
       });

@@ -17,6 +17,7 @@ const DATA_PATH = path.join(__dirname, 'data.json');
 
 interface User {
   id: string;
+  username: string;
   fullName: string;
   email: string;
   password: string;
@@ -58,15 +59,16 @@ function writeData(data: any) {
 
 // Authentication endpoint
 app.post('/api/login', (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
   const data = readData();
-  const user: User | undefined = data.users.find((u: User) => u.email === email);
-  console.log('Login attempt:', email, 'User found:', !!user, 'User data:', user);
+  const user: User | undefined = data.users.find((u: User) => u.username === username);
+  console.log('Login attempt:', username, 'User found:', !!user, 'User data:', user);
   if (user && user.password === password) {
     const loginResponse = {
       success: true, 
       user: { 
         id: user.id, 
+        username: user.username,
         fullName: user.fullName,
         email: user.email, 
         phone: user.phone,
@@ -83,17 +85,17 @@ app.post('/api/login', (req, res) => {
 
 // Create new user/customer
 app.post('/api/users', (req, res) => {
-  const { email, password, role, fullName, phone, age, address } = req.body;
+  const { username, password, role, fullName, phone, age, address, email } = req.body;
   const data = readData();
 
   // Validate required fields
-  if (!fullName || !phone) {
-    return res.status(400).json({ success: false, error: 'Name and phone are required' });
+  if (!username || !fullName || !phone || !password) {
+    return res.status(400).json({ success: false, error: 'Username, fullName, phone, and password are required' });
   }
 
-  // Check if email already exists (for ADMIN/EMPLOYEE)
-  if (email && data.users.find((u: User) => u.email === email)) {
-    return res.status(400).json({ success: false, error: 'Email already registered' });
+  // Check if username already exists
+  if (data.users.find((u: User) => u.username === username)) {
+    return res.status(400).json({ success: false, error: 'Username already exists' });
   }
 
   // Check if phone already exists
@@ -106,9 +108,10 @@ app.post('/api/users', (req, res) => {
   const id = `user_${Date.now()}`;
   const user: User = {
     id,
+    username,
     fullName,
-    email: email || `${phone}@temp.lab`,
-    password: password || 'temp_' + Date.now(),
+    email: email || `${username}@elmostaqbal-lab.com`,
+    password,
     role: (role || 'CLIENT') as 'ADMIN' | 'EMPLOYEE' | 'CLIENT',
     phone,
     age: age || null,
@@ -187,16 +190,16 @@ app.get('/api/admin/customers', (req, res) => {
 
 // Create new employee (Admin only)
 app.post('/api/admin/create-employee', (req, res) => {
-  const { email, password, fullName, phone, role } = req.body;
+  const { username, password, fullName, phone, email, role } = req.body;
   const data = readData();
 
-  if (!fullName || !email || !password || !phone) {
-    return res.status(400).json({ success: false, error: 'Missing required fields' });
+  if (!username || !fullName || !password || !phone) {
+    return res.status(400).json({ success: false, error: 'Missing required fields: username, fullName, password, phone' });
   }
 
-  // Check if email already exists
-  if (data.users.find((u: User) => u.email === email)) {
-    return res.status(400).json({ success: false, error: 'Email already registered' });
+  // Check if username already exists
+  if (data.users.find((u: User) => u.username === username)) {
+    return res.status(400).json({ success: false, error: 'Username already exists' });
   }
 
   // Check if phone already exists
@@ -207,8 +210,9 @@ app.post('/api/admin/create-employee', (req, res) => {
 
   const newEmployee: User = {
     id: Date.now().toString(),
+    username,
     fullName,
-    email,
+    email: email || `${username}@elmostaqbal-lab.com`,
     password,
     phone,
     role: role === 'EMPLOYEE' ? 'EMPLOYEE' : 'ADMIN',

@@ -47,11 +47,11 @@ async function get(path: string) {
 }
 
 export const smartLogin = async (
-  email: string,
+  username: string,
   password: string
 ): Promise<{ success: boolean; user?: any; role?: UserRole; error?: string }> => {
   try {
-    const resp = await post('/login', { email, password });
+    const resp = await post('/login', { username, password });
     return resp;
   } catch (e: any) {
     return { success: false, error: e.message };
