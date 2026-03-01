@@ -14,27 +14,45 @@ export interface UserProfile {
 const API_ROOT = 'http://localhost:4000/api';
 
 async function post(path: string, body: any) {
-  const res = await fetch(`${API_ROOT}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  
-  if (!res.ok) {
+  try {
+    console.log(`POST ${API_ROOT}${path}:`, body);
+    const res = await fetch(`${API_ROOT}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    
+    console.log(`Response status: ${res.status}`);
+    
+    let responseText = '';
     try {
-      const err = await res.json();
-      throw new Error(err.error || 'request failed');
-    } catch {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      responseText = await res.text();
+      console.log(`Response text: ${responseText}`);
+    } catch (e) {
+      console.error('Error reading response:', e);
+      throw new Error('Failed to read response');
     }
+    
+    if (!res.ok) {
+      try {
+        const err = JSON.parse(responseText);
+        throw new Error(err.error || `request failed: ${res.status}`);
+      } catch {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+    }
+    
+    if (!responseText) {
+      throw new Error('Empty response from server');
+    }
+    
+    const data = JSON.parse(responseText);
+    console.log('Parsed data:', data);
+    return data;
+  } catch (e: any) {
+    console.error('POST error:', e.message);
+    throw e;
   }
-  
-  const text = await res.text();
-  if (!text) {
-    throw new Error('Empty response from server');
-  }
-  
-  return JSON.parse(text);
 }
 
 async function get(path: string) {
@@ -51,10 +69,18 @@ export const smartLogin = async (
   password: string
 ): Promise<{ success: boolean; user?: any; role?: UserRole; error?: string; errorCode?: string }> => {
   try {
-    console.log('Attempting login with username:', username);
-    const resp = await post('/login', { username, password });
-    console.log('Login response:', resp);
-    if (resp.success && resp.user) {
+    console.log('smartLogin called with username:', username);
+    
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Login timeout after 10 seconds')), 10000)
+    );
+    
+    const loginPromise = post('/login', { username, password });
+    const resp = await Promise.race([loginPromise, timeoutPromise]);
+    
+    console.log('smartLogin response:', resp);
+    
+    if (resp && resp.success && resp.user) {
       return {
         success: true,
         user: resp.user,
@@ -63,11 +89,11 @@ export const smartLogin = async (
     }
     return { 
       success: false, 
-      error: resp.error || 'خطأ في تسجيل الدخول',
+      error: resp?.error || 'خطأ في تسجيل الدخول',
       errorCode: 'AUTH_FAILED'
     };
   } catch (e: any) {
-    console.error('Login error:', e);
+    console.error('smartLogin error:', e);
     return { 
       success: false, 
       error: e.message || 'خطأ في الاتصال بالخادم',
