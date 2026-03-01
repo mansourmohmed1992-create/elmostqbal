@@ -145,12 +145,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       onFocus={() => setFocusedField('username')}
                       onBlur={() => setFocusedField(null)}
                     />
-                    <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors" size={22} />
+                    <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
                     <label
-                      className={`absolute right-8 transition-all duration-200 font-black pointer-events-none ${
+                      className={`absolute transition-all duration-200 font-black pointer-events-none ${
                         focusedField === 'username' || username
-                          ? 'text-xs text-blue-600 -top-2.5 bg-white px-2'
-                          : 'text-gray-500 top-5 text-sm'
+                          ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
+                          : 'text-gray-500 top-5 text-sm left-16'
                       }`}
                     >
                       اسم المستخدم / الكيميائي
@@ -170,19 +170,19 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       onFocus={() => setFocusedField('password')}
                       onBlur={() => setFocusedField(null)}
                     />
-                    <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors" size={22} />
+                    <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors z-10"
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                     <label
-                      className={`absolute right-8 transition-all duration-200 font-black pointer-events-none ${
+                      className={`absolute transition-all duration-200 font-black pointer-events-none ${
                         focusedField === 'password' || password
-                          ? 'text-xs text-blue-600 -top-2.5 bg-white px-2'
-                          : 'text-gray-500 top-5 text-sm'
+                          ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
+                          : 'text-gray-500 top-5 text-sm left-16'
                       }`}
                     >
                       كلمة المرور الآمنة
