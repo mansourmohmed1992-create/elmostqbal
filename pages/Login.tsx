@@ -10,15 +10,19 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
+  const [isSignUp, setIsSignUp] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMessage, setResetMessage] = useState('');
   const [resetError, setResetError] = useState('');
-  const [focusedField, setFocusedField] = useState<'username' | 'password' | null>(null);
+  const [focusedField, setFocusedField] = useState<'username' | 'password' | 'confirmPassword' | 'email' | null>(null);
 
   const handleReset = async () => {
     setResetLoading(true);
@@ -37,6 +41,68 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       if (result.errorCode) console.error('reset password error', result.errorCode);
     }
     setResetLoading(false);
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    // التحقق من البيانات
+    if (!username.trim()) {
+      setError('أدخل اسم المستخدم');
+      setLoading(false);
+      return;
+    }
+    if (!email.trim()) {
+      setError('أدخل البريد الإلكتروني');
+      setLoading(false);
+      return;
+    }
+    if (password.length < 6) {
+      setError('يجب أن تكون كلمة المرور 6 أحرف على الأقل');
+      setLoading(false);
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('كلمات المرور غير متطابقة');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // إنشاء حساب جديد عبر API
+      const response = await fetch('http://localhost:4000/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim(),
+          password: password,
+          role: 'CLIENT'
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setError('');
+        onLogin({
+          id: data.id,
+          name: username,
+          username: username,
+          email: email.trim(),
+          role: UserRole.CLIENT,
+          isNewUser: true
+        });
+      } else {
+        setError(data.error || 'فشل إنشاء الحساب');
+      }
+    } catch (err) {
+      setError('خطأ في الاتصال بالخادم');
+      console.error(err);
+    }
+
+    setLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,12 +191,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           <div className="p-12 md:p-16">
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={isSignUp ? handleSignUp : handleSubmit} className="space-y-8">
               {error && (
                 <div className="bg-red-50 text-red-600 p-5 rounded-3xl text-xs font-black border border-red-100 text-center animate-shake">
                   {error}
                 </div>
               )}
+              
+              {/* Title */}
+              <h2 className="text-center text-2xl font-black text-gray-800">
+                {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
+              </h2>
               
               <div className="space-y-8">
                 {/* Username Field */}
@@ -189,6 +260,66 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     </label>
                   </div>
                 </div>
+
+                {/* Email Field (Sign Up only) */}
+                {isSignUp && (
+                  <div className="relative">
+                    <div className="relative group">
+                      <input
+                        type="email"
+                        required
+                        className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        onFocus={() => setFocusedField('email')}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                      <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
+                      <label
+                        className={`absolute transition-all duration-200 font-black pointer-events-none ${
+                          focusedField === 'email' || email
+                            ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
+                            : 'text-gray-500 top-5 text-sm right-20'
+                        }`}
+                      >
+                        البريد الإلكتروني
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Confirm Password Field (Sign Up only) */}
+                {isSignUp && (
+                  <div className="relative">
+                    <div className="relative group">
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        required
+                        className="w-full pr-16 pl-12 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        onFocus={() => setFocusedField('confirmPassword')}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                      <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors z-10"
+                      >
+                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                      <label
+                        className={`absolute transition-all duration-200 font-black pointer-events-none ${
+                          focusedField === 'confirmPassword' || confirmPassword
+                            ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
+                            : 'text-gray-500 top-5 text-sm right-20'
+                        }`}
+                      >
+                        تأكيد كلمة المرور
+                      </label>
+                  </div>
+                </div>
               </div>
 
               <button
@@ -196,23 +327,46 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 disabled={loading}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-6 rounded-[2.2rem] font-black text-xl transition-all shadow-2xl shadow-blue-200 flex items-center justify-center gap-4 transform active:scale-95 group"
               >
-                <span>{loading ? 'جاري الدخول...' : 'دخول'}</span>
+                <span>{loading ? (isSignUp ? 'جاري الإنشاء...' : 'جاري الدخول...') : (isSignUp ? 'إنشاء حساب' : 'دخول')}</span>
                 <LogIn size={26} className="group-hover:translate-x-[-6px] transition-transform" />
               </button>
 
-              {/* forgot password link & status */}
+              {/* Toggle between Login and Sign Up */}
               <div className="mt-4 text-center">
+                <p className="text-gray-600 text-sm mb-3">
+                  {isSignUp ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟'}
+                </p>
                 <button
                   type="button"
-                  disabled={resetLoading || !username}
-                  onClick={handleReset}
-                  className="text-sm text-blue-600 hover:underline"
+                  onClick={() => {
+                    setIsSignUp(!isSignUp);
+                    setError('');
+                    setUsername('');
+                    setPassword('');
+                    setEmail('');
+                    setConfirmPassword('');
+                  }}
+                  className="text-blue-600 hover:text-blue-700 font-black text-sm hover:underline transition-colors"
                 >
-                  {resetLoading ? 'جاري الإرسال...' : 'نسيت كلمة المرور؟'}
+                  {isSignUp ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
                 </button>
-                {resetMessage && <p className="text-green-600 text-xs mt-1">{resetMessage}</p>}
-                {resetError && <p className="text-red-600 text-xs mt-1">{resetError}</p>}
               </div>
+
+              {/* forgot password link (Login only) */}
+              {!isSignUp && (
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    disabled={resetLoading || !username}
+                    onClick={handleReset}
+                    className="text-sm text-blue-600 hover:underline disabled:text-gray-400"
+                  >
+                    {resetLoading ? 'جاري الإرسال...' : 'نسيت كلمة المرور؟'}
+                  </button>
+                  {resetMessage && <p className="text-green-600 text-xs mt-1">{resetMessage}</p>}
+                  {resetError && <p className="text-red-600 text-xs mt-1">{resetError}</p>}
+                </div>
+              )}
             </form>
 
 
