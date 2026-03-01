@@ -190,11 +190,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               </div>
             </form>
 
-            <div className="mt-12 text-center pt-10 border-t border-gray-50">
-              <p className="text-gray-300 text-[10px] font-black uppercase tracking-[0.5em]">
-                Advanced Chemical Pathology System
-              </p>
-            </div>
+
           </div>
         </div>
       </div>
