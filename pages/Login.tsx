@@ -318,8 +318,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       >
                         تأكيد كلمة المرور
                       </label>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <button
