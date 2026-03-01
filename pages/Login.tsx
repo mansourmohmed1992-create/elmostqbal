@@ -212,11 +212,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           <div className="p-6 md:p-10">
             <form onSubmit={isSignUp ? handleSignUp : handleSubmit} className="space-y-5">
-              {error && (
-                <div className="bg-red-50 text-red-600 p-4 rounded-3xl text-xs font-black border border-red-100 text-center animate-shake">
-                  {error}
-                </div>
-              )}
+              {/* error banner intentionally removed per user request */}
               
               {/* Title */}
               <h2 className="text-center text-xl font-black text-gray-800">

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Users,
-  Plus,
   Edit2,
   Trash2,
   BarChart3,
@@ -46,7 +45,7 @@ interface Stats {
 }
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'customers' | 'add-employee'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'customers'>('stats');
   const [users, setUsers] = useState<User[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -56,15 +55,7 @@ const AdminDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
-  // Form states for adding employee
-  const [formData, setFormData] = useState({
-    username: '',
-    fullName: '',
-    email: '',
-    password: '',
-    phone: '',
-    role: 'EMPLOYEE'
-  });
+  // (Add employee feature removed)
 
   useEffect(() => {
     fetchAllData();
@@ -94,37 +85,7 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleAddEmployee = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    if (!formData.username || !formData.fullName || !formData.password || !formData.phone) {
-      setError('جميع الحقول المطلوبة: اسم المستخدم، الاسم الرباعي، كلمة المرور، رقم الهاتف');
-      return;
-    }
-
-    try {
-      const response = await fetch('http://localhost:4000/api/admin/create-employee', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setSuccess(`تم إضافة ${formData.role === 'EMPLOYEE' ? 'الموظف' : 'الإدارة'} بنجاح`);
-        setFormData({ username: '', fullName: '', email: '', password: '', phone: '', role: 'EMPLOYEE' });
-        await fetchAllData();
-      } else {
-        setError(data.error || 'فشل الإضافة');
-      }
-    } catch (err) {
-      setError('خطأ في الاتصال بالخادم');
-      console.error(err);
-    }
-  };
+  // add-employee removed
 
   const handleDeleteUser = async (userId: string) => {
     if (!window.confirm('هل تريد حذف هذا المستخدم؟')) return;
@@ -194,12 +155,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Messages */}
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg flex items-center gap-2 border border-red-200">
-          <AlertCircle size={20} />
-          <span className="font-bold">{error}</span>
-        </div>
-      )}
+      {/* error banner removed per user request */}
       {success && (
         <div className="mb-4 p-4 bg-green-50 text-green-600 rounded-lg flex items-center gap-2 border border-green-200">
           <CheckCircle size={20} />
@@ -212,133 +168,20 @@ const AdminDashboard: React.FC = () => {
         {[
           { id: 'stats', label: 'الإحصائيات', icon: BarChart },
           { id: 'users', label: 'المستخدمون', icon: Users },
-          { id: 'customers', label: 'العملاء', icon: UsersIcon },
-          { id: 'add-employee', label: 'إضافة موظف', icon: Plus }
-        ].map(tab => (
+          { id: 'customers', label: 'العملاء', icon: UsersIcon }
+        ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
-              activeTab === tab.id
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'bg-white text-gray-700 hover:bg-blue-50'
+            onClick={() => setActiveTab(tab.id as 'stats' | 'users' | 'customers')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors whitespace-nowrap ${
+              activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-200'
             }`}
           >
-            <tab.icon size={20} />
-            {tab.label}
+            <tab.icon size={18} />
+            <span>{tab.label}</span>
           </button>
         ))}
       </div>
-
-      {/* Content */}
-      {loading && (
-        <div className="text-center py-12">
-          <div className="inline-block w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-          <p className="text-gray-600 mt-4 font-bold">جاري التحميل...</p>
-        </div>
-      )}
-
-      {/* Stats Tab */}
-      {activeTab === 'stats' && stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {[
-            { label: 'إجمالي المستخدمين', value: stats.totalUsers, icon: Users, color: 'blue' },
-            { label: 'إجمالي الموظفين', value: stats.totalEmployees, icon: Users, color: 'green' },
-            { label: 'إجمالي الإدارات', value: stats.totalAdmins, icon: ShieldCheck, color: 'red' },
-            { label: 'إجمالي العملاء', value: stats.totalCustomers, icon: UsersIcon, color: 'purple' },
-            { label: 'إجمالي الاختبارات', value: stats.totalTests, icon: BarChart3, color: 'yellow' }
-          ].map((stat, index) => (
-            <div
-              key={index}
-              className={`bg-gradient-to-br from-${stat.color}-50 to-${stat.color}-100 p-6 rounded-lg border border-${stat.color}-200 shadow-md`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <stat.icon className={`text-${stat.color}-600`} size={28} />
-                <p className={`text-3xl font-black text-${stat.color}-600`}>{stat.value}</p>
-              </div>
-              <p className={`text-${stat.color}-700 font-bold`}>{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Add Employee Tab */}
-      {activeTab === 'add-employee' && (
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl">
-          <form onSubmit={handleAddEmployee} className="space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-gray-700 font-bold mb-2">اسم المستخدم</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 font-bold mb-2">الاسم الرباعي</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 font-bold mb-2">البريد الإلكتروني (اختياري)</label>
-                <input
-                  type="email"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 font-bold mb-2">رقم الهاتف</label>
-                <input
-                  type="tel"
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 font-bold mb-2">كلمة المرور</label>
-                <input
-                  type="password"
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-gray-700 font-bold mb-2">الدور</label>
-              <select
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              >
-                <option value="EMPLOYEE">موظف</option>
-                <option value="ADMIN">مسؤول</option>
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-black transition-colors"
-            >
-              إضافة {formData.role === 'EMPLOYEE' ? 'موظف' : 'مسؤول'}
-            </button>
-          </form>
-        </div>
-      )}
 
       {/* Users Tab */}
       {activeTab === 'users' && (

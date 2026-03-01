@@ -172,13 +172,7 @@ const AddCustomer: React.FC<AddCustomerProps> = ({ userId, userRole, onCustomerA
           </div>
         )}
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 text-red-700 p-4 rounded-[2rem] text-sm font-bold mb-6 border border-red-200 flex items-center gap-3">
-            <AlertCircle size={20} />
-            {error}
-          </div>
-        )}
+        {/* Error Message removed per user request */}
 
         {/* STAGE 1: Search */}
         {stage === 'search' && (

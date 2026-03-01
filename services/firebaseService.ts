@@ -49,12 +49,30 @@ async function get(path: string) {
 export const smartLogin = async (
   username: string,
   password: string
-): Promise<{ success: boolean; user?: any; role?: UserRole; error?: string }> => {
+): Promise<{ success: boolean; user?: any; role?: UserRole; error?: string; errorCode?: string }> => {
   try {
+    console.log('Attempting login with username:', username);
     const resp = await post('/login', { username, password });
-    return resp;
+    console.log('Login response:', resp);
+    if (resp.success && resp.user) {
+      return {
+        success: true,
+        user: resp.user,
+        role: resp.role || 'CLIENT'
+      };
+    }
+    return { 
+      success: false, 
+      error: resp.error || 'خطأ في تسجيل الدخول',
+      errorCode: 'AUTH_FAILED'
+    };
   } catch (e: any) {
-    return { success: false, error: e.message };
+    console.error('Login error:', e);
+    return { 
+      success: false, 
+      error: e.message || 'خطأ في الاتصال بالخادم',
+      errorCode: 'NETWORK_ERROR'
+    };
   }
 };
 

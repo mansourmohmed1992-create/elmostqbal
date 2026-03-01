@@ -60,9 +60,14 @@ function writeData(data: any) {
 // Authentication endpoint
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
+  console.log('Raw request body:', JSON.stringify(req.body));
   const data = readData();
+  console.log('All users in database:', JSON.stringify(data.users));
   const user: User | undefined = data.users.find((u: User) => u.username === username);
-  console.log('Login attempt:', username, 'User found:', !!user, 'User data:', user);
+  console.log('Login attempt with username:', username);
+  console.log('User found:', !!user);
+  console.log('User data:', user);
+  console.log('Password match:', user && user.password === password, 'provided:', password, 'stored:', user?.password);
   if (user && user.password === password) {
     const loginResponse = {
       success: true, 
