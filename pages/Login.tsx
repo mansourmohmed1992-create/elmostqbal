@@ -129,6 +129,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('handleSubmit called with', { username, password });
     setLoading(true);
     setError('');
     
@@ -222,6 +223,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
               </h2>
               
+              {/* show error message under title */}
+              {error && (
+                <p className="text-center text-red-600 font-bold mt-2">{error}</p>
+              )}
+
               <div className="space-y-5">
                 {/* Username Field */}
                 <div className="relative">
