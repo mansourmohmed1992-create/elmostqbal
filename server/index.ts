@@ -64,8 +64,10 @@ app.post('/api/login', (req, res) => {
   console.log('Raw request body:', JSON.stringify(req.body));
   const data = readData();
   console.log('All users in database:', JSON.stringify(data.users));
-  const user: User | undefined = data.users.find((u: User) => u.username === username);
-  console.log('Login attempt with username:', username);
+  // Normalize username to lowercase for comparison
+  const normalizedUsername = username.toLowerCase();
+  const user: User | undefined = data.users.find((u: User) => u.username === normalizedUsername);
+  console.log('Login attempt with username:', normalizedUsername);
   console.log('User found:', !!user);
   console.log('User data:', user);
   console.log('Password match:', user && user.password === password, 'provided:', password, 'stored:', user?.password);
@@ -99,8 +101,11 @@ app.post('/api/users', (req, res) => {
     return res.status(400).json({ success: false, error: 'Username, fullName, phone, and password are required' });
   }
 
+  // Normalize username to lowercase
+  const normalizedUsername = username.toLowerCase();
+  
   // Check if username already exists
-  if (data.users.find((u: User) => u.username === username)) {
+  if (data.users.find((u: User) => u.username === normalizedUsername)) {
     return res.status(400).json({ success: false, error: 'Username already exists' });
   }
 
@@ -114,9 +119,9 @@ app.post('/api/users', (req, res) => {
   const id = `user_${Date.now()}`;
   const user: User = {
     id,
-    username,
+    username: normalizedUsername,
     fullName,
-    email: email || `${username}@elmostaqbal-lab.com`,
+    email: email || `${normalizedUsername}@elmostaqbal-lab.com`,
     password,
     role: (role || 'CLIENT') as 'ADMIN' | 'EMPLOYEE' | 'CLIENT',
     phone,
@@ -148,9 +153,11 @@ app.post('/api/customers', (req, res) => {
   }
 
   const id = `customer_${Date.now()}`;
+  // Normalize username to lowercase if provided
+  const normalizedUsername = username ? username.toLowerCase() : `customer_${Date.now()}`;
   const customer: Customer = {
     id,
-    username: username || `customer_${Date.now()}`,
+    username: normalizedUsername,
     fullName,
     phone,
     age,
@@ -204,8 +211,11 @@ app.post('/api/admin/create-employee', (req, res) => {
     return res.status(400).json({ success: false, error: 'Missing required fields: username, fullName, password, phone' });
   }
 
+  // Normalize username to lowercase
+  const normalizedUsername = username.toLowerCase();
+  
   // Check if username already exists
-  if (data.users.find((u: User) => u.username === username)) {
+  if (data.users.find((u: User) => u.username === normalizedUsername)) {
     return res.status(400).json({ success: false, error: 'Username already exists' });
   }
 
@@ -217,9 +227,9 @@ app.post('/api/admin/create-employee', (req, res) => {
 
   const newEmployee: User = {
     id: Date.now().toString(),
-    username,
+    username: normalizedUsername,
     fullName,
-    email: email || `${username}@elmostaqbal-lab.com`,
+    email: email || `${normalizedUsername}@elmostaqbal-lab.com`,
     password,
     phone,
     role: role === 'EMPLOYEE' ? 'EMPLOYEE' : 'ADMIN',
@@ -247,8 +257,11 @@ app.post('/api/admin/users', (req, res) => {
     return res.status(400).json({ success: false, error: 'Missing required fields: username, fullName, password, phone' });
   }
 
+  // Normalize username to lowercase
+  const normalizedUsername = username.toLowerCase();
+  
   // Check if username already exists
-  if (data.users.find((u: User) => u.username === username)) {
+  if (data.users.find((u: User) => u.username === normalizedUsername)) {
     return res.status(400).json({ success: false, error: 'Username already exists' });
   }
 
@@ -260,9 +273,9 @@ app.post('/api/admin/users', (req, res) => {
 
   const newUser: User = {
     id: `user_${Date.now()}`,
-    username,
+    username: normalizedUsername,
     fullName,
-    email: email || `${username}@elmostaqbal-lab.com`,
+    email: email || `${normalizedUsername}@elmostaqbal-lab.com`,
     password,
     phone,
     role: (role || 'EMPLOYEE') as 'ADMIN' | 'EMPLOYEE' | 'CLIENT',
@@ -290,8 +303,11 @@ app.post('/api/admin/customers', (req, res) => {
     return res.status(400).json({ success: false, error: 'All fields required: username, fullName, phone, age, address' });
   }
 
+  // Normalize username to lowercase
+  const normalizedUsername = username.toLowerCase();
+  
   // Check if username exists in users
-  if (data.users?.find((u: User) => u.username === username)) {
+  if (data.users?.find((u: User) => u.username === normalizedUsername)) {
     return res.status(400).json({ success: false, error: 'Username already exists' });
   }
 
@@ -305,7 +321,7 @@ app.post('/api/admin/customers', (req, res) => {
   const id = `customer_${Date.now()}`;
   const customer: Customer = {
     id,
-    username,
+    username: normalizedUsername,
     fullName,
     phone,
     age,

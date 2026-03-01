@@ -57,6 +57,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       setLoading(false);
       return;
     }
+    
+    // Normalize username to lowercase
+    const normalizedUsername = username.toLowerCase();
     if (!phone.trim()) {
       setError('أدخل رقم الهاتف (واتس)');
       setLoading(false);
@@ -89,7 +92,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: username.trim(),
+          username: normalizedUsername,
           fullName: username.trim(),
           phone: phone.trim(),
           age: parseInt(age),
@@ -106,7 +109,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         onLogin({
           id: data.user.id,
           name: username,
-          username: username,
+          username: normalizedUsername,
           phone: phone.trim(),
           age: age,
           address: address.trim(),
@@ -129,7 +132,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setLoading(true);
     setError('');
     
-    const cleanUser = username.trim();
+    const cleanUser = username.trim().toLowerCase();
     
     if (!cleanUser) {
       setError('أدخل اسم المستخدم');

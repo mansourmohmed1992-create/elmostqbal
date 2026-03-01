@@ -75,13 +75,14 @@ const AdminDashboard: React.FC = () => {
     }
 
     try {
+      const normalizedUsername = employeeForm.username.trim().toLowerCase();
       const response = await fetch('http://localhost:4000/api/admin/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: employeeForm.username.trim(),
+          username: normalizedUsername,
           fullName: employeeForm.fullName,
-          email: employeeForm.email || `${employeeForm.username}@lab.com`,
+          email: employeeForm.email || `${normalizedUsername}@lab.com`,
           phone: employeeForm.phone,
           password: employeeForm.password,
           role: employeeForm.role
@@ -111,11 +112,12 @@ const AdminDashboard: React.FC = () => {
     }
 
     try {
+      const normalizedUsername = customerForm.username.trim().toLowerCase();
       const response = await fetch('http://localhost:4000/api/admin/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: customerForm.username.trim(),
+          username: normalizedUsername,
           fullName: customerForm.fullName,
           phone: customerForm.phone,
           age: parseInt(customerForm.age),
