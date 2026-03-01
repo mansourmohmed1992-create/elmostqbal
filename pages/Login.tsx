@@ -150,7 +150,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       className={`absolute transition-all duration-200 font-black pointer-events-none ${
                         focusedField === 'username' || username
                           ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
-                          : 'text-gray-500 top-5 text-sm left-16'
+                          : 'text-gray-500 top-5 text-sm right-20'
                       }`}
                     >
                       اسم المستخدم / الكيميائي
@@ -182,7 +182,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       className={`absolute transition-all duration-200 font-black pointer-events-none ${
                         focusedField === 'password' || password
                           ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
-                          : 'text-gray-500 top-5 text-sm left-16'
+                          : 'text-gray-500 top-5 text-sm right-20'
                       }`}
                     >
                       كلمة المرور الآمنة

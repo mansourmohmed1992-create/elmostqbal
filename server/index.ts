@@ -86,7 +86,7 @@ function setNested(data: any, path: string, value: any) {
 }
 
 // generic data retrieval (wildcard)
-app.get('/api/data/*', (req, res) => {
+app.get(/^\/api\/data\/(.+)$/, (req, res) => {
   const data = readData();
   const key = req.params[0];
   const val = getNested(data, key);
@@ -94,7 +94,7 @@ app.get('/api/data/*', (req, res) => {
 });
 
 // generic data save (overwrite)
-app.post('/api/data/*', (req, res) => {
+app.post(/^\/api\/data\/(.+)$/, (req, res) => {
   const data = readData();
   const key = req.params[0];
   setNested(data, key, req.body);
