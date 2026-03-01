@@ -172,6 +172,164 @@ app.get('/api/customers/search/:phone', (req, res) => {
   }
 });
 
+// Admin endpoints
+// Get all users (Admin only)
+app.get('/api/admin/users', (req, res) => {
+  const data = readData();
+  res.json({ success: true, users: data.users || [] });
+});
+
+// Get all customers (Admin only)
+app.get('/api/admin/customers', (req, res) => {
+  const data = readData();
+  res.json({ success: true, customers: data.customers || [] });
+});
+
+// Create new employee (Admin only)
+app.post('/api/admin/create-employee', (req, res) => {
+  const { email, password, fullName, phone, role } = req.body;
+  const data = readData();
+
+  if (!fullName || !email || !password || !phone) {
+    return res.status(400).json({ success: false, error: 'Missing required fields' });
+  }
+
+  // Check if email already exists
+  if (data.users.find((u: User) => u.email === email)) {
+    return res.status(400).json({ success: false, error: 'Email already registered' });
+  }
+
+  // Check if phone already exists
+  const phoneExists = data.users.find((u: User) => u.phone === phone);
+  if (phoneExists) {
+    return res.status(400).json({ success: false, error: 'Phone already registered' });
+  }
+
+  const newEmployee: User = {
+    id: Date.now().toString(),
+    fullName,
+    email,
+    password,
+    phone,
+    role: role === 'EMPLOYEE' ? 'EMPLOYEE' : 'ADMIN',
+    age: null,
+    address: null,
+    createdAt: new Date().toISOString()
+  };
+
+  data.users.push(newEmployee);
+  writeData(data);
+
+  res.json({ 
+    success: true, 
+    message: 'Employee created successfully',
+    user: newEmployee 
+  });
+});
+
+// Edit user (Admin only)
+app.put('/api/admin/users/:id', (req, res) => {
+  const { id } = req.params;
+  const { fullName, email, password, phone, age, address, role } = req.body;
+  const data = readData();
+
+  const userIndex = data.users.findIndex((u: User) => u.id === id);
+  if (userIndex === -1) {
+    return res.status(404).json({ success: false, error: 'User not found' });
+  }
+
+  const user = data.users[userIndex];
+
+  // Check email uniqueness if changed
+  if (email && email !== user.email && data.users.find((u: User) => u.email === email)) {
+    return res.status(400).json({ success: false, error: 'Email already registered' });
+  }
+
+  // Check phone uniqueness if changed
+  if (phone && phone !== user.phone && data.users.find((u: User) => u.phone === phone)) {
+    return res.status(400).json({ success: false, error: 'Phone already registered' });
+  }
+
+  // Update user
+  if (fullName) user.fullName = fullName;
+  if (email) user.email = email;
+  if (password) user.password = password;
+  if (phone) user.phone = phone;
+  if (age !== undefined) user.age = age;
+  if (address) user.address = address;
+  if (role) user.role = role;
+
+  writeData(data);
+
+  res.json({ 
+    success: true, 
+    message: 'User updated successfully',
+    user 
+  });
+});
+
+// Delete user (Admin only)
+app.delete('/api/admin/users/:id', (req, res) => {
+  const { id } = req.params;
+  const data = readData();
+
+  // Prevent deleting the admin itself
+  if (id === 'admin') {
+    return res.status(403).json({ success: false, error: 'Cannot delete admin account' });
+  }
+
+  const userIndex = data.users.findIndex((u: User) => u.id === id);
+  if (userIndex === -1) {
+    return res.status(404).json({ success: false, error: 'User not found' });
+  }
+
+  const deletedUser = data.users.splice(userIndex, 1);
+  writeData(data);
+
+  res.json({ 
+    success: true, 
+    message: 'User deleted successfully',
+    user: deletedUser[0]
+  });
+});
+
+// Delete customer (Admin only)
+app.delete('/api/admin/customers/:id', (req, res) => {
+  const { id } = req.params;
+  const data = readData();
+
+  const customerIndex = data.customers.findIndex((c: Customer) => c.id === id);
+  if (customerIndex === -1) {
+    return res.status(404).json({ success: false, error: 'Customer not found' });
+  }
+
+  const deletedCustomer = data.customers.splice(customerIndex, 1);
+  writeData(data);
+
+  res.json({ 
+    success: true, 
+    message: 'Customer deleted successfully',
+    customer: deletedCustomer[0]
+  });
+});
+
+// Get dashboard stats (Admin only)
+app.get('/api/admin/stats', (req, res) => {
+  const data = readData();
+
+  const stats = {
+    totalUsers: data.users?.length || 0,
+    totalCustomers: data.customers?.length || 0,
+    totalEmployees: data.users?.filter((u: User) => u.role === 'EMPLOYEE').length || 0,
+    totalAdmins: data.users?.filter((u: User) => u.role === 'ADMIN').length || 0,
+    totalTests: data.tests?.length || 0
+  };
+
+  res.json({ success: true, stats });
+});
+
+
+
 // helper to resolve nested key path
 function getNested(data: any, path: string) {
   const parts = path.split('/');

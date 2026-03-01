@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
 import Tests from './pages/Tests';
 import Admin from './pages/Admin';
+import AdminDashboard from './pages/AdminDashboard';
 import Accounts from './pages/Accounts';
 import ClientDashboard from './pages/ClientDashboard';
 import HomeTestRequest from './pages/HomeTestRequest';
@@ -106,13 +107,32 @@ const App: React.FC = () => {
   return (
     <Layout user={auth.user} onLogout={handleLogout}>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/patients" element={<Patients />} />
-        <Route path="/accounts" element={<Accounts />} />
-        <Route path="/tests" element={<Tests />} />
+        {/* Admin routes - Full access */}
         {auth.user?.role === UserRole.ADMIN && (
-          <Route path="/admin" element={<Admin />} />
+          <>
+            <Route path="/" element={<AdminDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/patients" element={<Patients />} />
+            <Route path="/accounts" element={<Accounts />} />
+            <Route path="/tests" element={<Tests />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </>
         )}
+
+        {/* Employee routes - Limited access */}
+        {auth.user?.role === UserRole.EMPLOYEE && (
+          <>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/patients" element={<Patients />} />
+            <Route path="/accounts" element={<Accounts />} />
+            <Route path="/tests" element={<Tests />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </>
+        )}
+
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

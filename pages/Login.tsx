@@ -197,49 +197,49 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       <div className="max-w-xl w-full relative z-10">
         <div className="bg-white rounded-[4rem] shadow-2xl shadow-blue-200/50 overflow-hidden border border-gray-100">
-          <div className="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 p-12 md:p-16 text-white text-center relative">
-            <div className="absolute top-4 right-8 opacity-10"><FlaskConical size={140} /></div>
+          <div className="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 p-6 md:p-10 text-white text-center relative">
+            <div className="absolute top-2 right-6 opacity-10"><FlaskConical size={100} /></div>
             
             <div className="flex flex-col items-center justify-center relative z-10">
-              <div className="bg-white/10 backdrop-blur-md p-6 rounded-[3rem] border border-white/20 inline-block mb-6">
+              <div className="bg-white/10 backdrop-blur-md p-3 md:p-4 rounded-[3rem] border border-white/20 inline-block mb-3">
                 <Logo className="w-auto h-auto" color="#ffffff" showText={true} />
               </div>
-              <p className="text-blue-100 font-bold opacity-80 text-xs uppercase tracking-[0.4em]">للتحاليل الطبية الكيميائية</p>
+              <p className="text-blue-100 font-bold opacity-80 text-xs uppercase tracking-[0.3em]">للتحاليل الطبية الكيميائية</p>
             </div>
           </div>
 
-          <div className="p-12 md:p-16">
-            <form onSubmit={isSignUp ? handleSignUp : handleSubmit} className="space-y-8">
+          <div className="p-6 md:p-10">
+            <form onSubmit={isSignUp ? handleSignUp : handleSubmit} className="space-y-5">
               {error && (
-                <div className="bg-red-50 text-red-600 p-5 rounded-3xl text-xs font-black border border-red-100 text-center animate-shake">
+                <div className="bg-red-50 text-red-600 p-4 rounded-3xl text-xs font-black border border-red-100 text-center animate-shake">
                   {error}
                 </div>
               )}
               
               {/* Title */}
-              <h2 className="text-center text-2xl font-black text-gray-800">
+              <h2 className="text-center text-xl font-black text-gray-800">
                 {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
               </h2>
               
-              <div className="space-y-8">
+              <div className="space-y-5">
                 {/* Username Field */}
                 <div className="relative">
                   <div className="relative group">
                     <input
                       type="text"
                       required
-                      className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
+                      className="w-full pr-16 pl-8 py-4 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       onFocus={() => setFocusedField('username')}
                       onBlur={() => setFocusedField(null)}
                     />
-                    <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
+                    <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={20} />
                     <label
                       className={`absolute transition-all duration-200 font-black pointer-events-none ${
                         focusedField === 'username' || username
                           ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
-                          : 'text-gray-500 top-5 text-sm right-20'
+                          : 'text-gray-500 top-1/2 -translate-y-1/2 text-sm right-20'
                       }`}
                     >
                       اسم المستخدم / الكيميائي
@@ -253,25 +253,25 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      className="w-full pr-16 pl-12 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
+                      className="w-full pr-16 pl-12 py-4 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       onFocus={() => setFocusedField('password')}
                       onBlur={() => setFocusedField(null)}
                     />
-                    <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
+                    <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={20} />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors z-10"
                     >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                     <label
                       className={`absolute transition-all duration-200 font-black pointer-events-none ${
                         focusedField === 'password' || password
                           ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
-                          : 'text-gray-500 top-5 text-sm right-20'
+                          : 'text-gray-500 top-1/2 -translate-y-1/2 text-sm right-20'
                       }`}
                     >
                       كلمة المرور الآمنة
@@ -286,18 +286,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       <input
                         type="email"
                         required
-                        className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
+                        className="w-full pr-16 pl-8 py-4 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         onFocus={() => setFocusedField('email')}
                         onBlur={() => setFocusedField(null)}
                       />
-                      <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
+                      <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={20} />
                       <label
                         className={`absolute transition-all duration-200 font-black pointer-events-none ${
                           focusedField === 'email' || email
                             ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
-                            : 'text-gray-500 top-5 text-sm right-20'
+                            : 'text-gray-500 top-1/2 -translate-y-1/2 text-sm right-20'
                         }`}
                       >
                         البريد الإلكتروني
@@ -313,25 +313,25 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       <input
                         type={showConfirmPassword ? 'text' : 'password'}
                         required
-                        className="w-full pr-16 pl-12 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
+                        className="w-full pr-16 pl-12 py-4 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         onFocus={() => setFocusedField('confirmPassword')}
                         onBlur={() => setFocusedField(null)}
                       />
-                      <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
+                      <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={20} />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors z-10"
                       >
-                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                       <label
                         className={`absolute transition-all duration-200 font-black pointer-events-none ${
                           focusedField === 'confirmPassword' || confirmPassword
                             ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
-                            : 'text-gray-500 top-5 text-sm right-20'
+                            : 'text-gray-500 top-1/2 -translate-y-1/2 text-sm right-20'
                         }`}
                       >
                         تأكيد كلمة المرور
@@ -347,19 +347,19 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       <input
                         type="tel"
                         required
-                        className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
+                        className="w-full pr-16 pl-8 py-4 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         onFocus={() => setFocusedField('phone')}
                         onBlur={() => setFocusedField(null)}
                         placeholder="201000000000"
                       />
-                      <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
+                      <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={20} />
                       <label
                         className={`absolute transition-all duration-200 font-black pointer-events-none ${
                           focusedField === 'phone' || phone
                             ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
-                            : 'text-gray-500 top-5 text-sm right-20'
+                            : 'text-gray-500 top-1/2 -translate-y-1/2 text-sm right-20'
                         }`}
                       >
                         رقم الهاتف (واتس)
@@ -375,7 +375,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       <input
                         type="number"
                         required
-                        className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
+                        className="w-full pr-16 pl-8 py-4 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
                         value={age}
                         onChange={(e) => setAge(e.target.value)}
                         onFocus={() => setFocusedField('age')}
@@ -383,12 +383,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         min="1"
                         max="150"
                       />
-                      <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
+                      <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={20} />
                       <label
                         className={`absolute transition-all duration-200 font-black pointer-events-none ${
                           focusedField === 'age' || age
                             ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
-                            : 'text-gray-500 top-5 text-sm right-20'
+                            : 'text-gray-500 top-1/2 -translate-y-1/2 text-sm right-20'
                         }`}
                       >
                         السن
@@ -404,18 +404,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       <input
                         type="text"
                         required
-                        className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
+                        className="w-full pr-16 pl-8 py-4 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
                         onFocus={() => setFocusedField('address')}
                         onBlur={() => setFocusedField(null)}
                       />
-                      <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
+                      <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={20} />
                       <label
                         className={`absolute transition-all duration-200 font-black pointer-events-none ${
                           focusedField === 'address' || address
                             ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
-                            : 'text-gray-500 top-5 text-sm right-20'
+                            : 'text-gray-500 top-1/2 -translate-y-1/2 text-sm right-20'
                         }`}
                       >
                         العنوان
@@ -428,14 +428,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-6 rounded-[2.2rem] font-black text-xl transition-all shadow-2xl shadow-blue-200 flex items-center justify-center gap-4 transform active:scale-95 group"
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-4 md:py-5 rounded-[2.2rem] font-black text-lg md:text-xl transition-all shadow-2xl shadow-blue-200 flex items-center justify-center gap-3 transform active:scale-95 group"
               >
                 <span>{loading ? (isSignUp ? 'جاري الإنشاء...' : 'جاري الدخول...') : (isSignUp ? 'إنشاء حساب' : 'دخول')}</span>
-                <LogIn size={26} className="group-hover:translate-x-[-6px] transition-transform" />
+                <LogIn size={22} className="group-hover:translate-x-[-6px] transition-transform" />
               </button>
 
               {/* Toggle between Login and Sign Up */}
-              <div className="mt-4 text-center">
+              <div className="mt-2 text-center">
                 <button
                   type="button"
                   onClick={() => {
@@ -449,7 +449,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     setAge('');
                     setAddress('');
                   }}
-                  className="text-blue-600 hover:text-blue-700 font-black text-sm hover:underline transition-colors"
+                  className="text-blue-600 hover:text-blue-700 font-black text-xs hover:underline transition-colors"
                 >
                   {isSignUp ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
                 </button>
@@ -457,12 +457,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
               {/* forgot password link (Login only) */}
               {!isSignUp && (
-                <div className="mt-4 text-center">
+                <div className="mt-2 text-center">
                   <button
                     type="button"
                     disabled={resetLoading || !username}
                     onClick={handleReset}
-                    className="text-blue-600 hover:text-blue-700 font-black text-sm hover:underline transition-colors disabled:text-gray-400"
+                    className="text-blue-600 hover:text-blue-700 font-black text-xs hover:underline transition-colors disabled:text-gray-400"
                   >
                     {resetLoading ? 'جاري الإرسال...' : 'نسيت كلمة المرور؟'}
                   </button>

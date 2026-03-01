@@ -11,7 +11,7 @@ export interface UserProfile {
   lastLogin?: string;
 }
 
-const API_ROOT = '/api';
+const API_ROOT = 'http://localhost:4000/api';
 
 async function post(path: string, body: any) {
   const res = await fetch(`${API_ROOT}${path}`, {
@@ -19,16 +19,31 @@ async function post(path: string, body: any) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
+  
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'request failed');
+    try {
+      const err = await res.json();
+      throw new Error(err.error || 'request failed');
+    } catch {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
   }
-  return res.json();
+  
+  const text = await res.text();
+  if (!text) {
+    throw new Error('Empty response from server');
+  }
+  
+  return JSON.parse(text);
 }
 
 async function get(path: string) {
   const res = await fetch(`${API_ROOT}${path}`);
-  return res.json();
+  const text = await res.text();
+  if (!text) {
+    throw new Error('Empty response from server');
+  }
+  return JSON.parse(text);
 }
 
 export const smartLogin = async (
