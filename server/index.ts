@@ -61,8 +61,9 @@ app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
   const data = readData();
   const user: User | undefined = data.users.find((u: User) => u.email === email);
+  console.log('Login attempt:', email, 'User found:', !!user, 'User data:', user);
   if (user && user.password === password) {
-    res.json({ 
+    const loginResponse = {
       success: true, 
       user: { 
         id: user.id, 
@@ -72,7 +73,9 @@ app.post('/api/login', (req, res) => {
         role: user.role 
       },
       role: user.role
-    });
+    };
+    console.log('Login response:', JSON.stringify(loginResponse));
+    res.json(loginResponse);
   } else {
     res.status(401).json({ success: false, error: 'Invalid credentials' });
   }
