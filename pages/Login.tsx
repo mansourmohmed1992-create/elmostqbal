@@ -18,6 +18,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMessage, setResetMessage] = useState('');
   const [resetError, setResetError] = useState('');
+  const [focusedField, setFocusedField] = useState<'username' | 'password' | null>(null);
 
   const handleReset = async () => {
     setResetLoading(true);
@@ -131,37 +132,63 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 </div>
               )}
               
-              <div className="space-y-3">
-                <label className="block text-xs font-black text-gray-400 mr-2 uppercase tracking-widest">اسم المستخدم / الكيميائي</label>
-                <div className="relative group">
-                  <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors" size={22} />
-                  <input
-                    type="text"
-                    required
-                    className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                  />
+              <div className="space-y-8">
+                {/* Username Field */}
+                <div className="relative">
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      required
+                      className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800 placeholder-transparent"
+                      placeholder="اسم المستخدم"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      onFocus={() => setFocusedField('username')}
+                      onBlur={() => setFocusedField(null)}
+                    />
+                    <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors" size={22} />
+                    <label
+                      className={`absolute right-8 transition-all duration-200 font-black pointer-events-none ${
+                        focusedField === 'username' || username
+                          ? 'text-xs text-blue-600 -top-2.5 bg-white px-2'
+                          : 'text-gray-500 top-5 text-sm'
+                      }`}
+                    >
+                      اسم المستخدم / الكيميائي
+                    </label>
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-3">
-                <label className="block text-xs font-black text-gray-400 mr-2 uppercase tracking-widest">كلمة المرور الآمنة</label>
-                <div className="relative group">
-                  <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors" size={22} />
-                  <div className="relative">
+                {/* Password Field */}
+                <div className="relative">
+                  <div className="relative group">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
-                      placeholder="••••••••"
+                      className="w-full pr-16 pl-12 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800 placeholder-transparent"
+                      placeholder="كلمة المرور"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      onFocus={() => setFocusedField('password')}
+                      onBlur={() => setFocusedField(null)}
                     />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
+                    <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors" size={22} />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors"
+                    >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
+                    <label
+                      className={`absolute right-8 transition-all duration-200 font-black pointer-events-none ${
+                        focusedField === 'password' || password
+                          ? 'text-xs text-blue-600 -top-2.5 bg-white px-2'
+                          : 'text-gray-500 top-5 text-sm'
+                      }`}
+                    >
+                      كلمة المرور الآمنة
+                    </label>
                   </div>
                 </div>
               </div>
