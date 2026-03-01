@@ -17,9 +17,27 @@ const DATA_PATH = path.join(__dirname, 'data.json');
 
 interface User {
   id: string;
+  fullName: string;
   email: string;
   password: string;
-  role: string;
+  role: 'ADMIN' | 'EMPLOYEE' | 'CLIENT';
+  phone: string;
+  age?: number | null;
+  address?: string | null;
+  createdAt?: string;
+}
+
+interface Customer {
+  id: string;
+  fullName: string;
+  phone: string;
+  age: number;
+  address: string;
+  email?: string;
+  password?: string;
+  role: 'CLIENT';
+  createdBy: string;
+  createdAt: string;
 }
 
 interface LabTest {
@@ -44,23 +62,111 @@ app.post('/api/login', (req, res) => {
   const data = readData();
   const user: User | undefined = data.users.find((u: User) => u.email === email);
   if (user && user.password === password) {
-    res.json({ success: true, user: { id: user.id, email: user.email, role: user.role } });
+    res.json({ 
+      success: true, 
+      user: { 
+        id: user.id, 
+        fullName: user.fullName,
+        email: user.email, 
+        phone: user.phone,
+        role: user.role 
+      },
+      role: user.role
+    });
   } else {
     res.status(401).json({ success: false, error: 'Invalid credentials' });
   }
 });
 
-// Create new user (admin only)
+// Create new user/customer
 app.post('/api/users', (req, res) => {
-  const { email, password, role } = req.body;
+  const { email, password, role, fullName, phone, age, address } = req.body;
   const data = readData();
-  if (data.users.find((u: User) => u.email === email)) {
-    return res.status(400).json({ success: false, error: 'User exists' });
+
+  // Validate required fields
+  if (!fullName || !phone) {
+    return res.status(400).json({ success: false, error: 'Name and phone are required' });
   }
+
+  // Check if email already exists (for ADMIN/EMPLOYEE)
+  if (email && data.users.find((u: User) => u.email === email)) {
+    return res.status(400).json({ success: false, error: 'Email already registered' });
+  }
+
+  // Check if phone already exists
+  const phoneExists = data.users.find((u: User) => u.phone === phone) || 
+                      (data.customers && data.customers.find((c: Customer) => c.phone === phone));
+  if (phoneExists) {
+    return res.status(400).json({ success: false, error: 'Phone number already registered' });
+  }
+
   const id = `user_${Date.now()}`;
-  data.users.push({ id, email, password, role });
+  const user: User = {
+    id,
+    fullName,
+    email: email || `${phone}@temp.lab`,
+    password: password || 'temp_' + Date.now(),
+    role: (role || 'CLIENT') as 'ADMIN' | 'EMPLOYEE' | 'CLIENT',
+    phone,
+    age: age || null,
+    address: address || null,
+    createdAt: new Date().toISOString()
+  };
+
+  data.users.push(user);
   writeData(data);
-  res.json({ success: true, id });
+  res.json({ success: true, id, user });
+});
+
+// Create customer by admin/employee
+app.post('/api/customers', (req, res) => {
+  const { fullName, phone, age, address, userId } = req.body;
+  const data = readData();
+
+  // Validate required fields
+  if (!fullName || !phone) {
+    return res.status(400).json({ success: false, error: 'Name and phone are required' });
+  }
+
+  // Check if phone already exists
+  const phoneExists = data.customers?.find((c: Customer) => c.phone === phone) || 
+                      data.users?.find((u: User) => u.phone === phone);
+  if (phoneExists) {
+    return res.status(400).json({ success: false, error: 'Customer with this phone already exists' });
+  }
+
+  const id = `customer_${Date.now()}`;
+  const customer: Customer = {
+    id,
+    fullName,
+    phone,
+    age,
+    address,
+    role: 'CLIENT',
+    createdBy: userId,
+    createdAt: new Date().toISOString()
+  };
+
+  if (!data.customers) data.customers = [];
+  data.customers.push(customer);
+  writeData(data);
+  res.json({ success: true, id, customer });
+});
+
+// Search for customer by phone
+app.get('/api/customers/search/:phone', (req, res) => {
+  const data = readData();
+  const phone = req.params.phone;
+  const inUsers = data.users?.find((u: User) => u.phone === phone);
+  const inCustomers = data.customers?.find((c: Customer) => c.phone === phone);
+  
+  if (inUsers) {
+    res.json({ found: true, type: 'user', data: inUsers });
+  } else if (inCustomers) {
+    res.json({ found: true, type: 'customer', data: inCustomers });
+  } else {
+    res.json({ found: false });
+  }
 });
 
 // helper to resolve nested key path

@@ -1,6 +1,16 @@
 {
   "users": [
-    { "id": "admin", "email": "admin@elmostaqbal-lab.com", "password": "admin123", "role": "ADMIN" }
+    {
+      "id": "admin",
+      "fullName": "مدير النظام",
+      "email": "admin@elmostaqbal-lab.com",
+      "password": "F@ress222",
+      "role": "ADMIN",
+      "phone": "201000000001",
+      "age": null,
+      "address": null
+    }
   ],
-  "tests": []
+  "tests": [],
+  "customers": []
 }

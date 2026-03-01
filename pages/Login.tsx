@@ -15,6 +15,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [age, setAge] = useState('');
+  const [address, setAddress] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -22,7 +25,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMessage, setResetMessage] = useState('');
   const [resetError, setResetError] = useState('');
-  const [focusedField, setFocusedField] = useState<'username' | 'password' | 'confirmPassword' | 'email' | null>(null);
+  const [focusedField, setFocusedField] = useState<'username' | 'password' | 'confirmPassword' | 'email' | 'phone' | 'age' | 'address' | null>(null);
 
   const handleReset = async () => {
     setResetLoading(true);
@@ -50,12 +53,22 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
     // التحقق من البيانات
     if (!username.trim()) {
-      setError('أدخل اسم المستخدم');
+      setError('أدخل الاسم رباعي');
       setLoading(false);
       return;
     }
-    if (!email.trim()) {
-      setError('أدخل البريد الإلكتروني');
+    if (!phone.trim()) {
+      setError('أدخل رقم الهاتف (واتس)');
+      setLoading(false);
+      return;
+    }
+    if (!age) {
+      setError('أدخل السن');
+      setLoading(false);
+      return;
+    }
+    if (!address.trim()) {
+      setError('أدخل العنوان');
       setLoading(false);
       return;
     }
@@ -76,7 +89,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: email.trim(),
+          fullName: username.trim(),
+          phone: phone.trim(),
+          age: parseInt(age),
+          address: address.trim(),
           password: password,
           role: 'CLIENT'
         })
@@ -87,10 +103,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       if (response.ok && data.success) {
         setError('');
         onLogin({
-          id: data.id,
+          id: data.user.id,
           name: username,
           username: username,
-          email: email.trim(),
+          phone: phone.trim(),
+          age: age,
+          address: address.trim(),
           role: UserRole.CLIENT,
           isNewUser: true
         });
@@ -321,6 +339,90 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     </div>
                   </div>
                 )}
+
+                {/* Phone Field (Sign Up only) */}
+                {isSignUp && (
+                  <div className="relative">
+                    <div className="relative group">
+                      <input
+                        type="tel"
+                        required
+                        className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        onFocus={() => setFocusedField('phone')}
+                        onBlur={() => setFocusedField(null)}
+                        placeholder="201000000000"
+                      />
+                      <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
+                      <label
+                        className={`absolute transition-all duration-200 font-black pointer-events-none ${
+                          focusedField === 'phone' || phone
+                            ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
+                            : 'text-gray-500 top-5 text-sm right-20'
+                        }`}
+                      >
+                        رقم الهاتف (واتس)
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Age Field (Sign Up only) */}
+                {isSignUp && (
+                  <div className="relative">
+                    <div className="relative group">
+                      <input
+                        type="number"
+                        required
+                        className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
+                        value={age}
+                        onChange={(e) => setAge(e.target.value)}
+                        onFocus={() => setFocusedField('age')}
+                        onBlur={() => setFocusedField(null)}
+                        min="1"
+                        max="150"
+                      />
+                      <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
+                      <label
+                        className={`absolute transition-all duration-200 font-black pointer-events-none ${
+                          focusedField === 'age' || age
+                            ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
+                            : 'text-gray-500 top-5 text-sm right-20'
+                        }`}
+                      >
+                        السن
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Address Field (Sign Up only) */}
+                {isSignUp && (
+                  <div className="relative">
+                    <div className="relative group">
+                      <input
+                        type="text"
+                        required
+                        className="w-full pr-16 pl-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        onFocus={() => setFocusedField('address')}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                      <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={22} />
+                      <label
+                        className={`absolute transition-all duration-200 font-black pointer-events-none ${
+                          focusedField === 'address' || address
+                            ? 'text-xs text-blue-600 -top-2.5 bg-white px-2 right-8'
+                            : 'text-gray-500 top-5 text-sm right-20'
+                        }`}
+                      >
+                        العنوان
+                      </label>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button
@@ -343,6 +445,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     setPassword('');
                     setEmail('');
                     setConfirmPassword('');
+                    setPhone('');
+                    setAge('');
+                    setAddress('');
                   }}
                   className="text-blue-600 hover:text-blue-700 font-black text-sm hover:underline transition-colors"
                 >
