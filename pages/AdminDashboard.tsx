@@ -27,6 +27,7 @@ interface User {
 
 interface Customer {
   id: string;
+  username: string;
   fullName: string;
   phone: string;
   age: number;
@@ -57,8 +58,8 @@ const AdminDashboard: React.FC = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showAddEmployee, setShowAddEmployee] = useState(false);
   const [showAddCustomer, setShowAddCustomer] = useState(false);
-  const [employeeForm, setEmployeeForm] = useState({ fullName: '', email: '', password: '', phone: '', role: 'EMPLOYEE' });
-  const [customerForm, setCustomerForm] = useState({ fullName: '', phone: '', age: '', address: '' });
+  const [employeeForm, setEmployeeForm] = useState({ username: '', fullName: '', email: '', password: '', phone: '', role: 'EMPLOYEE' });
+  const [customerForm, setCustomerForm] = useState({ username: '', fullName: '', phone: '', age: '', address: '' });
 
   // add-employee removed
 
@@ -68,8 +69,8 @@ const AdminDashboard: React.FC = () => {
 
   const handleAddEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!employeeForm.fullName || !employeeForm.phone || !employeeForm.password) {
-      setError('يرجى ملء جميع الحقول');
+    if (!employeeForm.username || !employeeForm.fullName || !employeeForm.phone || !employeeForm.password) {
+      setError('يرجى ملء جميع الحقول المطلوبة');
       return;
     }
 
@@ -78,8 +79,9 @@ const AdminDashboard: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          username: employeeForm.username.trim(),
           fullName: employeeForm.fullName,
-          email: employeeForm.email || `${employeeForm.fullName}@lab.com`,
+          email: employeeForm.email || `${employeeForm.username}@lab.com`,
           phone: employeeForm.phone,
           password: employeeForm.password,
           role: employeeForm.role
@@ -89,7 +91,7 @@ const AdminDashboard: React.FC = () => {
       const data = await response.json();
       if (response.ok && data.success) {
         setSuccess('تم إضافة الموظف بنجاح');
-        setEmployeeForm({ fullName: '', email: '', password: '', phone: '', role: 'EMPLOYEE' });
+        setEmployeeForm({ username: '', fullName: '', email: '', password: '', phone: '', role: 'EMPLOYEE' });
         setShowAddEmployee(false);
         await fetchAllData();
       } else {
@@ -103,8 +105,8 @@ const AdminDashboard: React.FC = () => {
 
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerForm.fullName || !customerForm.phone || !customerForm.age || !customerForm.address) {
-      setError('يرجى ملء جميع الحقول');
+    if (!customerForm.username || !customerForm.fullName || !customerForm.phone || !customerForm.age || !customerForm.address) {
+      setError('يرجى ملء جميع الحقول المطلوبة');
       return;
     }
 
@@ -113,6 +115,7 @@ const AdminDashboard: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          username: customerForm.username.trim(),
           fullName: customerForm.fullName,
           phone: customerForm.phone,
           age: parseInt(customerForm.age),
@@ -123,7 +126,7 @@ const AdminDashboard: React.FC = () => {
       const data = await response.json();
       if (response.ok && data.success) {
         setSuccess('تم إضافة العميل بنجاح');
-        setCustomerForm({ fullName: '', phone: '', age: '', address: '' });
+        setCustomerForm({ username: '', fullName: '', phone: '', age: '', address: '' });
         setShowAddCustomer(false);
         await fetchAllData();
       } else {
@@ -284,6 +287,14 @@ const AdminDashboard: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <input
                   type="text"
+                  placeholder="اسم المستخدم (Username)"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={employeeForm.username}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, username: e.target.value })}
+                  required
+                />
+                <input
+                  type="text"
                   placeholder="الاسم الرباعي"
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   value={employeeForm.fullName}
@@ -393,6 +404,14 @@ const AdminDashboard: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <input
                   type="text"
+                  placeholder="اسم المستخدم (Username)"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={customerForm.username}
+                  onChange={(e) => setCustomerForm({ ...customerForm, username: e.target.value })}
+                  required
+                />
+                <input
+                  type="text"
                   placeholder="الاسم الرباعي"
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   value={customerForm.fullName}
@@ -418,7 +437,7 @@ const AdminDashboard: React.FC = () => {
                 <input
                   type="text"
                   placeholder="العنوان"
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                   value={customerForm.address}
                   onChange={(e) => setCustomerForm({ ...customerForm, address: e.target.value })}
                   required

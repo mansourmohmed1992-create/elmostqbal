@@ -30,6 +30,7 @@ interface User {
 
 interface Customer {
   id: string;
+  username: string;
   fullName: string;
   phone: string;
   age: number;
@@ -131,7 +132,7 @@ app.post('/api/users', (req, res) => {
 
 // Create customer by admin/employee
 app.post('/api/customers', (req, res) => {
-  const { fullName, phone, age, address, userId } = req.body;
+  const { username, fullName, phone, age, address, userId } = req.body;
   const data = readData();
 
   // Validate required fields
@@ -149,6 +150,7 @@ app.post('/api/customers', (req, res) => {
   const id = `customer_${Date.now()}`;
   const customer: Customer = {
     id,
+    username: username || `customer_${Date.now()}`,
     fullName,
     phone,
     age,
@@ -234,6 +236,89 @@ app.post('/api/admin/create-employee', (req, res) => {
     message: 'Employee created successfully',
     user: newEmployee 
   });
+});
+
+// Create new admin user (Admin only)
+app.post('/api/admin/users', (req, res) => {
+  const { username, password, fullName, phone, email, role } = req.body;
+  const data = readData();
+
+  if (!username || !fullName || !password || !phone) {
+    return res.status(400).json({ success: false, error: 'Missing required fields: username, fullName, password, phone' });
+  }
+
+  // Check if username already exists
+  if (data.users.find((u: User) => u.username === username)) {
+    return res.status(400).json({ success: false, error: 'Username already exists' });
+  }
+
+  // Check if phone already exists
+  const phoneExists = data.users.find((u: User) => u.phone === phone);
+  if (phoneExists) {
+    return res.status(400).json({ success: false, error: 'Phone already registered' });
+  }
+
+  const newUser: User = {
+    id: `user_${Date.now()}`,
+    username,
+    fullName,
+    email: email || `${username}@elmostaqbal-lab.com`,
+    password,
+    phone,
+    role: (role || 'EMPLOYEE') as 'ADMIN' | 'EMPLOYEE' | 'CLIENT',
+    age: null,
+    address: null,
+    createdAt: new Date().toISOString()
+  };
+
+  data.users.push(newUser);
+  writeData(data);
+
+  res.json({ 
+    success: true, 
+    user: newUser 
+  });
+});
+
+// Create new customer (Admin only)
+app.post('/api/admin/customers', (req, res) => {
+  const { username, fullName, phone, age, address } = req.body;
+  const data = readData();
+
+  // Validate required fields
+  if (!username || !fullName || !phone || !age || !address) {
+    return res.status(400).json({ success: false, error: 'All fields required: username, fullName, phone, age, address' });
+  }
+
+  // Check if username exists in users
+  if (data.users?.find((u: User) => u.username === username)) {
+    return res.status(400).json({ success: false, error: 'Username already exists' });
+  }
+
+  // Check if phone already exists
+  const phoneExists = data.customers?.find((c: Customer) => c.phone === phone) || 
+                      data.users?.find((u: User) => u.phone === phone);
+  if (phoneExists) {
+    return res.status(400).json({ success: false, error: 'Phone number already registered' });
+  }
+
+  const id = `customer_${Date.now()}`;
+  const customer: Customer = {
+    id,
+    username,
+    fullName,
+    phone,
+    age,
+    address,
+    role: 'CLIENT',
+    createdBy: 'admin',
+    createdAt: new Date().toISOString()
+  };
+
+  if (!data.customers) data.customers = [];
+  data.customers.push(customer);
+  writeData(data);
+  res.json({ success: true, customer });
 });
 
 // Edit user (Admin only)
