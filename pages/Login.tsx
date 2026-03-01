@@ -334,9 +334,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
               {/* Toggle between Login and Sign Up */}
               <div className="mt-4 text-center">
-                <p className="text-gray-600 text-sm mb-3">
-                  {isSignUp ? 'لديك حساب بالفعل؟' : 'ليس لديك حساب؟'}
-                </p>
                 <button
                   type="button"
                   onClick={() => {
@@ -360,7 +357,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     type="button"
                     disabled={resetLoading || !username}
                     onClick={handleReset}
-                    className="text-sm text-blue-600 hover:underline disabled:text-gray-400"
+                    className="text-blue-600 hover:text-blue-700 font-black text-sm hover:underline transition-colors disabled:text-gray-400"
                   >
                     {resetLoading ? 'جاري الإرسال...' : 'نسيت كلمة المرور؟'}
                   </button>
