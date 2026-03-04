@@ -20,12 +20,30 @@ const Patients = () => {
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [showPassword, setShowPassword] = useState(false);
   const [showEditPassword, setShowEditPassword] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem('lab_patients', JSON.stringify(patients));
-  }, [patients]);
+    fetchPatients();
+  }, []);
 
-  const filteredPatients = patients.filter(p => p.name.includes(searchTerm) || p.phone.includes(searchTerm));
+  const fetchPatients = async () => {
+    try {
+      const response = await fetch('http://localhost:4000/api/admin/customers');
+      const data = await response.json();
+      if (data.success) {
+        setPatients(data.customers || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch patients:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredPatients = patients.filter(p => 
+    (p.fullName || p.name || '').includes(searchTerm) || 
+    (p.phone || '').includes(searchTerm)
+  );
 
   const formatEgyptianPhone = (phone: string) => {
     let cleaned = phone.trim().replace(/\D/g, '');
@@ -35,102 +53,119 @@ const Patients = () => {
     return '20' + cleaned;
   };
 
-  const handleAddPatient = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const p: Patient = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: newPatient.name,
-      age: parseInt(newPatient.age) || 0,
-      gender: newPatient.gender as any,
-      phone: newPatient.phone,
-      createdAt: new Date().toLocaleDateString('en-CA'),
-      username: newPatient.username,
-      password: newPatient.password,
-    };
-
-    setPatients([p, ...patients]);
-    setGeneratedCreds({ username: newPatient.username, password: newPatient.password, name: newPatient.name, phone: newPatient.phone });
-    
-    // حفظ الحساب في قاعدة البيانات الموحدة للمرضى
-    const managed = JSON.parse(localStorage.getItem('lab_managed_accounts') || '{}');
-    managed[newPatient.username] = { 
-      password: newPatient.password, 
-      name: newPatient.name, 
-      phone: newPatient.phone,
-      role: UserRole.CLIENT,
-      id: p.id
-    };
-    localStorage.setItem('lab_managed_accounts', JSON.stringify(managed));
-
-    setShowModal(false);
-    setShowSuccessModal(true);
-    setNewPatient({ name: '', age: '', gender: 'ذكر', phone: '', username: '', password: '' });
+  const formatPhone = (input: string) => {
+    let p = input.replace(/\D/g, '');
+    if (p.startsWith('0')) p = p.slice(1);
+    if (!p.startsWith('20')) p = '20' + p;
+    return p;
   };
 
-  const handleDeletePatient = (id: string) => {
+  const handleAddPatient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newPatient.name || !newPatient.age || !newPatient.phone || !newPatient.username || !newPatient.password) {
+      alert('يرجى ملء جميع الحقول');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:4000/api/admin/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: newPatient.username.toLowerCase(),
+          fullName: newPatient.name,
+          phone: newPatient.phone,
+          age: parseInt(newPatient.age) || 0,
+          address: '',
+          password: newPatient.password
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setGeneratedCreds({ 
+          username: newPatient.username, 
+          password: newPatient.password, 
+          name: newPatient.name, 
+          phone: '+20' + formatPhone(newPatient.phone)
+        });
+        setShowModal(false);
+        setShowSuccessModal(true);
+        setNewPatient({ name: '', age: '', gender: 'ذكر', phone: '', username: '', password: '' });
+        await fetchPatients();
+      } else {
+        alert(data.error || 'فشل إضافة المريض');
+      }
+    } catch (error) {
+      console.error('Error adding patient:', error);
+      alert('حدث خطأ في إضافة المريض');
+    }
+  };
+
+  const handleDeletePatient = async (id: string) => {
     if (confirm('هل أنت متأكد من حذف هذا المريض وكافة بياناته؟')) {
-      setPatients(patients.filter(p => p.id !== id));
+      try {
+        const response = await fetch(`http://localhost:4000/api/admin/customers/${id}`, {
+          method: 'DELETE'
+        });
+        const data = await response.json();
+        if (data.success) {
+          setPatients(patients.filter(p => p.id !== id));
+        } else {
+          alert(data.error || 'فشل حذف المريض');
+        }
+      } catch (error) {
+        console.error('Error deleting patient:', error);
+        alert('حدث خطأ في حذف المريض');
+      }
     }
   };
 
   const handleOpenEditModal = (patient: Patient) => {
     setEditingPatient(patient);
     setNewPatient({
-      name: patient.name,
-      age: patient.age.toString(),
-      gender: patient.gender,
-      phone: patient.phone,
+      name: patient.fullName || patient.name,
+      age: patient.age?.toString() || '',
+      gender: patient.gender || 'ذكر',
+      phone: patient.phone || '',
       username: patient.username || '',
       password: patient.password || ''
     });
     setShowEditModal(true);
   };
 
-  const handleUpdatePatient = (e: React.FormEvent) => {
+  const handleUpdatePatient = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!editingPatient) return;
-
-    const updated = patients.map(p => 
-      p.id === editingPatient.id 
-        ? {
-            ...p,
-            name: newPatient.name,
-            age: parseInt(newPatient.age) || 0,
-            gender: newPatient.gender as any,
+    if (editingPatient) {
+      try {
+        const response = await fetch(`http://localhost:4000/api/admin/customers/${editingPatient.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName: newPatient.name,
             phone: newPatient.phone,
-            username: newPatient.username,
+            age: parseInt(newPatient.age) || 0,
+            address: '',
             password: newPatient.password
-          }
-        : p
-    );
+          })
+        });
 
-    setPatients(updated);
-
-    // تحديث في قاعدة البيانات الموحدة
-    const managed = JSON.parse(localStorage.getItem('lab_managed_accounts') || '{}');
-    
-    // حذف الحساب القديم إذا كان موجود
-    if (editingPatient.username) {
-      delete managed[editingPatient.username];
+        const data = await response.json();
+        if (data.success) {
+          setShowEditModal(false);
+          setEditingPatient(null);
+          setNewPatient({ name: '', age: '', gender: 'ذكر', phone: '', username: '', password: '' });
+          await fetchPatients();
+          alert('✅ تم تحديث بيانات المريض بنجاح!');
+        } else {
+          alert(data.error || 'فشل تحديث المريض');
+        }
+      } catch (error) {
+        console.error('Error updating patient:', error);
+        alert('حدث خطأ في تحديث المريض');
+      }
     }
-
-    // إضافة الحساب الجديد
-    managed[newPatient.username] = {
-      password: newPatient.password,
-      name: newPatient.name,
-      phone: newPatient.phone,
-      role: UserRole.CLIENT,
-      id: editingPatient.id
-    };
-
-    localStorage.setItem('lab_managed_accounts', JSON.stringify(managed));
-
-    setShowEditModal(false);
-    setEditingPatient(null);
-    setNewPatient({ name: '', age: '', gender: 'ذكر', phone: '', username: '', password: '' });
-    alert('✅ تم تحديث بيانات المريض بنجاح!');
   };
 
   const handleOpenUploadModal = (patient: Patient) => {
@@ -233,22 +268,96 @@ const Patients = () => {
 
   const sendWhatsApp = () => {
     const fullPhone = formatEgyptianPhone(generatedCreds.phone);
-    const baseURL = window.location.origin;
-    const message = `🏥 *مرحباً بك في معمل المستقبل* 👋%0A%0A✅ تم تسجيل بياناتك بنجاح%0A%0A━━━━━━━━━━━━━━━━━━━━━%0A👤 *معلومات الحساب*%0A━━━━━━━━━━━━━━━━━━━━━%0A%0Aالاسم الكامل: ${generatedCreds.name}%0Arقم الهاتف: +20${generatedCreds.phone}%0A%0A━━━━━━━━━━━━━━━━━━━━━%0A🔐 *بيانات دخولك*%0A━━━━━━━━━━━━━━━━━━━━━%0A%0A📧 اسم المستخدم:%0A\`\`\`${generatedCreds.username}\`\`\`%0A%0A🔑 كلمة المرور:%0A\`\`\`${generatedCreds.password}\`\`\`%0A%0A━━━━━━━━━━━━━━━━━━━━━%0A🌐 *رابط البوابة:*%0A${baseURL}%0A%0A━━━━━━━━━━━━━━━━━━━━━%0A%0A💡 يمكنك الآن:%0A✓ عرض نتائجك الكيميائية%0A✓ طلب تحاليل منزلية%0A✓ متابعة حالة طلباتك%0A%0E📞 في حالة استفسار:%0Aaاتصل بنا عبر الواتس%0A%0Aشكراً لثقتك بنا 🔬`;
+    const hostname = window.location.hostname;
+    const port = window.location.port || '3000';
+    const baseURL = hostname === 'localhost' || hostname === '127.0.0.1' 
+      ? 'http://192.96.1.102:3000'
+      : `${window.location.protocol}//${hostname}:${port}`;
+    const rawMessage = `🏥 *مرحباً بك في معمل المستقبل* 👋
+
+✅ تم تسجيل بياناتك بنجاح
+
+━━━━━━━━━━━━━━━━━━━━━
+👤 *معلومات الحساب*
+━━━━━━━━━━━━━━━━━━━━━
+
+الاسم الكامل: ${generatedCreds.name}
+رقم الهاتف: +20${generatedCreds.phone}
+
+━━━━━━━━━━━━━━━━━━━━━
+🔐 *بيانات دخولك*
+━━━━━━━━━━━━━━━━━━━━━
+
+📧 اسم المستخدم:
+\`\`\`${generatedCreds.username}\`\`\`
+
+🔑 كلمة المرور:
+\`\`\`${generatedCreds.password}\`\`\`
+
+━━━━━━━━━━━━━━━━━━━━━
+🌐 *رابط البوابة:*
+${baseURL}
+
+━━━━━━━━━━━━━━━━━━━━━
+
+💡 يمكنك الآن:
+✓ عرض نتائجك الكيميائية
+✓ طلب تحاليل منزلية
+✓ متابعة حالة طلباتك
+
+📞 في حالة استفسار:
+اتصل بنا عبر الواتس
+
+شكراً لثقتك بنا 🔬`;
     
-    window.open(`https://wa.me/${fullPhone}?text=${message}`, '_blank');
+    window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(rawMessage)}`, '_blank');
   };
 
   const resendWhatsApp = (patient: Patient) => {
-    if (!patient.username || !patient.password) {
-      alert('لا توجد بيانات دخول لهذا المريض');
+    const patientPhone = patient.phone || '';
+    const patientName = patient.fullName || patient.name || 'المريض';
+    const patientUsername = (patient as any).username || patient.username || 'غير معروف';
+    const patientPassword = (patient as any).password || 'اطلب من الإدارة';
+    
+    if (!patientPhone) {
+      alert('لا يوجد رقم هاتف لهذا المريض');
       return;
     }
-    const fullPhone = formatEgyptianPhone(patient.phone);
-    const baseURL = window.location.origin;
-    const message = `🏥 *إعادة إرسال بيانات الدخول* 👋%0A%0Aالسلام عليكم%0Aأ/ ${patient.name}%0A%0A━━━━━━━━━━━━━━━━━━━━━%0A🔐 *بيانات دخول حسابك في معمل المستقبل*%0A━━━━━━━━━━━━━━━━━━━━━%0A%0A📧 اسم المستخدم:%0A\`\`\`${patient.username}\`\`\`%0A%0A🔑 كلمة المرور:%0A\`\`\`${patient.password}\`\`\`%0A%0A━━━━━━━━━━━━━━━━━━━━━%0A🌐 *رابط البوابة:*%0A${baseURL}%0A%0A━━━━━━━━━━━━━━━━━━━━━%0A%0A⏱️ تذكر: بيانات دخولك آمنة ومحفوظة لديك فقط%0A%0Aفي حالة استفسار:%0Aaاتصل بنا عبر الواتس%0A%0Aشكراً لثقتك بنا 🔬`;
+    const fullPhone = formatEgyptianPhone(patientPhone);
+    const hostname = window.location.hostname;
+    const port = window.location.port || '3000';
+    const baseURL = hostname === 'localhost' || hostname === '127.0.0.1'
+      ? 'http://192.96.1.102:3000'
+      : `${window.location.protocol}//${hostname}:${port}`;
+    const rawMessage = `🏥 *إعادة إرسال بيانات الدخول* 👋
+
+السلام عليكم
+أ/ ${patientName}
+
+━━━━━━━━━━━━━━━━━━━━━
+🔐 *بيانات دخول حسابك في معمل المستقبل*
+━━━━━━━━━━━━━━━━━━━━━
+
+📧 اسم المستخدم:
+\`\`\`${patientUsername}\`\`\`
+
+🔑 كلمة المرور:
+\`\`\`${patientPassword}\`\`\`
+
+━━━━━━━━━━━━━━━━━━━━━
+🌐 *رابط البوابة:*
+${baseURL}
+
+━━━━━━━━━━━━━━━━━━━━━
+
+⏱️ تذكر: بيانات دخولك آمنة ومحفوظة لديك فقط
+
+في حالة استفسار:
+اتصل بنا عبر الواتس
+
+شكراً لثقتك بنا 🔬`;
     
-    window.open(`https://wa.me/${fullPhone}?text=${message}`, '_blank');
+    window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(rawMessage)}`, '_blank');
   };
 
   return (
@@ -302,15 +411,15 @@ const Patients = () => {
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black shadow-lg shadow-blue-100">
-                        {patient.name[0]}
+                        {(patient.fullName || patient.name || 'م').charAt(0)}
                       </div>
-                      <span className="font-black text-gray-900 text-lg">{patient.name}</span>
+                      <span className="font-black text-gray-900 text-lg">{patient.fullName || patient.name}</span>
                     </div>
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
                       <span className="font-bold text-gray-700">{patient.age} سنة</span>
-                      <span className="text-[10px] text-blue-500 font-black">{patient.gender}</span>
+                      <span className="text-[10px] text-blue-500 font-black">{patient.gender || 'ذكر'}</span>
                     </div>
                   </td>
                   <td className="px-8 py-6">
@@ -319,7 +428,7 @@ const Patients = () => {
                       {patient.phone}
                     </div>
                   </td>
-                  <td className="px-8 py-6 text-gray-500 font-bold">{patient.createdAt}</td>
+                  <td className="px-8 py-6 text-gray-500 font-bold">{patient.createdAt?.split('T')[0] || new Date().toLocaleDateString('en-CA')}</td>
                   <td className="px-8 py-6">
                     <div className="flex items-center justify-center gap-2">
                       <button 
@@ -366,7 +475,7 @@ const Patients = () => {
 
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-[3rem] w-full max-w-md p-10 shadow-2xl animate-slideUp">
+          <div className="bg-white rounded-[3rem] w-full max-w-lg p-6 md:p-10 shadow-2xl animate-slideUp max-h-[90vh] overflow-y-auto">
             <h3 className="text-2xl font-black mb-8 text-gray-900">تسجيل مريض جديد</h3>
             <form onSubmit={handleAddPatient} className="space-y-6">
               <div className="space-y-1">
@@ -390,7 +499,7 @@ const Patients = () => {
                 <label className="text-xs font-black text-gray-400 mr-2">رقم الموبايل (مصر)</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg text-xs">+20</span>
-                  <input required type="tel" placeholder="01xxxxxxxxx" className="w-full pr-6 pl-16 py-4 bg-gray-50 border border-transparent rounded-[1.5rem] focus:ring-2 focus:ring-blue-500 font-bold" value={newPatient.phone} onChange={e => setNewPatient({...newPatient, phone: e.target.value})} />
+                  <input required type="tel" inputMode="numeric" maxLength={11} placeholder="01xxxxxxxxx" className="w-full pr-6 pl-16 py-4 bg-gray-50 border border-transparent rounded-[1.5rem] focus:ring-2 focus:ring-blue-500 font-bold" value={newPatient.phone} onChange={e => setNewPatient({...newPatient, phone: e.target.value})} />
                 </div>
               </div>
               <div className="space-y-1">
@@ -438,7 +547,7 @@ const Patients = () => {
 
       {showEditModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-[3rem] w-full max-w-md p-10 shadow-2xl animate-slideUp">
+          <div className="bg-white rounded-[3rem] w-full max-w-lg p-6 md:p-10 shadow-2xl animate-slideUp max-h-[90vh] overflow-y-auto">
             <h3 className="text-2xl font-black mb-8 text-gray-900">تعديل بيانات المريض</h3>
             <form onSubmit={handleUpdatePatient} className="space-y-6">
               <div className="space-y-1">
@@ -462,7 +571,7 @@ const Patients = () => {
                 <label className="text-xs font-black text-gray-400 mr-2">رقم الموبايل (مصر)</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg text-xs">+20</span>
-                  <input required type="tel" placeholder="01xxxxxxxxx" className="w-full pr-6 pl-16 py-4 bg-gray-50 border border-transparent rounded-[1.5rem] focus:ring-2 focus:ring-blue-500 font-bold" value={newPatient.phone} onChange={e => setNewPatient({...newPatient, phone: e.target.value})} />
+                  <input required type="tel" inputMode="numeric" maxLength={11} placeholder="01xxxxxxxxx" className="w-full pr-6 pl-16 py-4 bg-gray-50 border border-transparent rounded-[1.5rem] focus:ring-2 focus:ring-blue-500 font-bold" value={newPatient.phone} onChange={e => setNewPatient({...newPatient, phone: e.target.value})} />
                 </div>
               </div>
               <div className="space-y-1">

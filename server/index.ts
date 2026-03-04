@@ -50,8 +50,45 @@ interface LabTest {
 }
 
 function readData() {
-  const raw = fs.readFileSync(DATA_PATH, 'utf-8');
-  return JSON.parse(raw);
+  try {
+    let raw = fs.readFileSync(DATA_PATH, 'utf-8');
+    // strip UTF-8 BOM if present
+    if (raw && raw.length > 0 && raw.charCodeAt(0) === 0xfeff) {
+      raw = raw.slice(1);
+    }
+    try {
+      return JSON.parse(raw);
+    } catch (err) {
+      console.error('Failed to parse data.json, raw content:');
+      console.error(raw);
+      console.error('Backing up corrupt data.json to data.json.bak and recreating a clean data file.');
+      try {
+        fs.copyFileSync(DATA_PATH, DATA_PATH + '.bak');
+      } catch (copyErr) {
+        console.error('Failed to backup data.json:', copyErr);
+      }
+      const empty = { users: [], customers: [], tests: [] };
+      try {
+        writeData(empty);
+      } catch (writeErr) {
+        console.error('Failed to write fresh data.json:', writeErr);
+      }
+      return empty;
+    }
+  } catch (err: any) {
+    // If file missing, create an empty structure
+    if (err.code === 'ENOENT') {
+      const empty = { users: [], customers: [], tests: [] };
+      try {
+        writeData(empty);
+      } catch (writeErr) {
+        console.error('Failed to write initial data.json:', writeErr);
+      }
+      return empty;
+    }
+    console.error('Error reading data file:', err);
+    return { users: [], customers: [], tests: [] };
+  }
 }
 
 function writeData(data: any) {
@@ -94,10 +131,17 @@ app.post('/api/login', (req, res) => {
 // Create new user/customer
 app.post('/api/users', (req, res) => {
   const { username, password, role, fullName, phone, age, address, email } = req.body;
+  const normalizePhone = (input: string) => {
+    let p = String(input).replace(/\D/g, '');
+    if (p.startsWith('0')) p = p.slice(1);
+    if (!p.startsWith('20')) p = '20' + p;
+    return p;
+  };
+  const phoneValue = normalizePhone(phone);
   const data = readData();
 
   // Validate required fields
-  if (!username || !fullName || !phone || !password) {
+  if (!username || !fullName || !phoneValue || !password) {
     return res.status(400).json({ success: false, error: 'Username, fullName, phone, and password are required' });
   }
 
@@ -110,8 +154,8 @@ app.post('/api/users', (req, res) => {
   }
 
   // Check if phone already exists
-  const phoneExists = data.users.find((u: User) => u.phone === phone) || 
-                      (data.customers && data.customers.find((c: Customer) => c.phone === phone));
+  const phoneExists = data.users.find((u: User) => u.phone === phoneValue) || 
+                      (data.customers && data.customers.find((c: Customer) => c.phone === phoneValue));
   if (phoneExists) {
     return res.status(400).json({ success: false, error: 'Phone number already registered' });
   }
@@ -124,7 +168,7 @@ app.post('/api/users', (req, res) => {
     email: email || `${normalizedUsername}@elmostaqbal-lab.com`,
     password,
     role: (role || 'CLIENT') as 'ADMIN' | 'EMPLOYEE' | 'CLIENT',
-    phone,
+    phone: phoneValue,
     age: age || null,
     address: address || null,
     createdAt: new Date().toISOString()
@@ -138,10 +182,17 @@ app.post('/api/users', (req, res) => {
 // Create customer by admin/employee
 app.post('/api/customers', (req, res) => {
   const { username, fullName, phone, age, address, userId } = req.body;
+  const normalizePhone = (input: string) => {
+    let p = String(input).replace(/\D/g, '');
+    if (p.startsWith('0')) p = p.slice(1);
+    if (!p.startsWith('20')) p = '20' + p;
+    return p;
+  };
+  const phoneValue = normalizePhone(phone);
   const data = readData();
 
   // Validate required fields
-  if (!fullName || !phone) {
+  if (!fullName || !phoneValue) {
     return res.status(400).json({ success: false, error: 'Name and phone are required' });
   }
 
@@ -159,7 +210,7 @@ app.post('/api/customers', (req, res) => {
     id,
     username: normalizedUsername,
     fullName,
-    phone,
+    phone: phoneValue,
     age,
     address,
     role: 'CLIENT',
@@ -295,12 +346,12 @@ app.post('/api/admin/users', (req, res) => {
 
 // Create new customer (Admin only)
 app.post('/api/admin/customers', (req, res) => {
-  const { username, fullName, phone, age, address } = req.body;
+  const { username, fullName, phone, age, address, password } = req.body;
   const data = readData();
 
   // Validate required fields
-  if (!username || !fullName || !phone || !age || !address) {
-    return res.status(400).json({ success: false, error: 'All fields required: username, fullName, phone, age, address' });
+  if (!username || !fullName || !phone || !age) {
+    return res.status(400).json({ success: false, error: 'All fields required: username, fullName, phone, age' });
   }
 
   // Normalize username to lowercase
@@ -325,16 +376,52 @@ app.post('/api/admin/customers', (req, res) => {
     fullName,
     phone,
     age,
-    address,
+    address: address || '',
     role: 'CLIENT',
     createdBy: 'admin',
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    password: password || ''
   };
 
   if (!data.customers) data.customers = [];
   data.customers.push(customer);
   writeData(data);
   res.json({ success: true, customer });
+});
+
+// Edit customer (Admin only)
+app.put('/api/admin/customers/:id', (req, res) => {
+  console.log('PUT /api/admin/customers body:', req.body);
+  const { id } = req.params;
+  const { fullName, phone, age, address, password } = req.body;
+  const data = readData();
+
+  const customerIndex = data.customers.findIndex((c: Customer) => c.id === id);
+  if (customerIndex === -1) {
+    return res.status(404).json({ success: false, error: 'Customer not found' });
+  }
+
+  const customer = data.customers[customerIndex];
+
+  // Check phone uniqueness if changed
+  if (phone && phone !== customer.phone && data.customers.find((c: Customer) => c.phone === phone)) {
+    return res.status(400).json({ success: false, error: 'Phone already registered' });
+  }
+
+  // Update customer
+  if (fullName) customer.fullName = fullName;
+  if (phone) customer.phone = phone;
+  if (age !== undefined) customer.age = age;
+  if (address) customer.address = address;
+  if (password) customer.password = password;
+
+  writeData(data);
+
+  res.json({ 
+    success: true, 
+    message: 'Customer updated successfully',
+    customer 
+  });
 });
 
 // Edit user (Admin only)

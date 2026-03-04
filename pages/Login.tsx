@@ -354,12 +354,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       <input
                         type="tel"
                         required
+                        inputMode="numeric"
+                        maxLength={11}
                         className="w-full pr-16 pl-8 py-4 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         onFocus={() => setFocusedField('phone')}
                         onBlur={() => setFocusedField(null)}
-                        placeholder="201000000000"
+                        placeholder="رقم الهاتف"
                       />
                       <User className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors z-10" size={20} />
                       <label
@@ -369,7 +371,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             : 'text-gray-500 top-1/2 -translate-y-1/2 text-sm right-20'
                         }`}
                       >
-                        رقم الهاتف (واتس)
+                        رقم الهاتف
                       </label>
                     </div>
                   </div>

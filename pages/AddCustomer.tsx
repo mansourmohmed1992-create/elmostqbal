@@ -23,6 +23,13 @@ const AddCustomer: React.FC<AddCustomerProps> = ({ userId, userRole, onCustomerA
   const [existingCustomer, setExistingCustomer] = useState<any>(null);
 
   // Check if customer exists
+  const formatPhone = (input: string) => {
+    let p = input.replace(/\D/g, '');
+    if (p.startsWith('0')) p = p.slice(1);
+    if (!p.startsWith('20')) p = '20' + p;
+    return p;
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -36,7 +43,7 @@ const AddCustomer: React.FC<AddCustomerProps> = ({ userId, userRole, onCustomerA
     }
 
     try {
-      const response = await fetch(`http://localhost:4000/api/customers/search/${searchPhone.trim()}`);
+      const response = await fetch(`http://localhost:4000/api/customers/search/${formatPhone(searchPhone.trim())}`);
       const data = await response.json();
 
       if (data.found) {
@@ -92,7 +99,7 @@ const AddCustomer: React.FC<AddCustomerProps> = ({ userId, userRole, onCustomerA
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName: fullName.trim(),
-          phone: phone.trim(),
+          phone: formatPhone(phone.trim()),
           age: parseInt(age),
           address: address.trim(),
           userId: userId
@@ -122,21 +129,30 @@ const AddCustomer: React.FC<AddCustomerProps> = ({ userId, userRole, onCustomerA
     setLoading(false);
   };
 
-  // Field component with floating label
+  // Field component with floating label; supports optional prefix (e.g. +20)
   const FloatingLabelInput = ({
     label,
     value,
     onChange,
     fieldName,
     type = 'text',
-    icon: Icon
+    icon: Icon,
+    prefix,
+    maxLength
   }: any) => (
     <div className="relative">
       <div className="relative group">
+        {prefix && (
+          <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-blue-600">
+            {prefix}
+          </span>
+        )}
         <input
           type={type}
           required
-          className="w-full pr-16 pl-8 py-4 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800"
+          inputMode={type === 'tel' ? 'numeric' : undefined}
+          maxLength={maxLength}
+          className={`w-full pr-16 ${prefix ? 'pl-20' : 'pl-8'} py-4 bg-gray-50 border border-gray-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all font-bold text-gray-800`}
           value={value}
           onChange={onChange}
           onFocus={() => setFocusedField(fieldName)}
@@ -186,6 +202,7 @@ const AddCustomer: React.FC<AddCustomerProps> = ({ userId, userRole, onCustomerA
                 onChange={(e: any) => setSearchPhone(e.target.value)}
                 fieldName="search"
                 icon={Phone}
+                prefix="+20"
               />
 
               <button
@@ -254,6 +271,9 @@ const AddCustomer: React.FC<AddCustomerProps> = ({ userId, userRole, onCustomerA
                 onChange={(e: any) => setPhone(e.target.value)}
                 fieldName="phone"
                 icon={Phone}
+                prefix="+20"
+                type="tel"
+                maxLength={11}
               />
 
               <FloatingLabelInput

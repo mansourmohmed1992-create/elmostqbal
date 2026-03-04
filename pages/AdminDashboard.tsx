@@ -10,7 +10,9 @@ import {
   BarChart,
   UsersIcon,
   ShieldCheck,
-  Plus
+  Plus,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 interface User {
@@ -57,7 +59,9 @@ const AdminDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showAddEmployee, setShowAddEmployee] = useState(false);
+  const [showEditEmployee, setShowEditEmployee] = useState(false);
   const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [employeeForm, setEmployeeForm] = useState({ username: '', fullName: '', email: '', password: '', phone: '', role: 'EMPLOYEE' });
   const [customerForm, setCustomerForm] = useState({ username: '', fullName: '', phone: '', age: '', address: '' });
 
@@ -83,7 +87,7 @@ const AdminDashboard: React.FC = () => {
           username: normalizedUsername,
           fullName: employeeForm.fullName,
           email: employeeForm.email || `${normalizedUsername}@lab.com`,
-          phone: employeeForm.phone,
+          phone: formatPhone(employeeForm.phone),
           password: employeeForm.password,
           role: employeeForm.role
         })
@@ -102,6 +106,13 @@ const AdminDashboard: React.FC = () => {
       setError('خطأ في الاتصال بالخادم');
       console.error(err);
     }
+  };
+
+  const formatPhone = (input: string) => {
+    let p = input.replace(/\D/g, '');
+    if (p.startsWith('0')) p = p.slice(1);
+    if (!p.startsWith('20')) p = '20' + p;
+    return p;
   };
 
   const handleAddCustomer = async (e: React.FormEvent) => {
@@ -222,6 +233,57 @@ const AdminDashboard: React.FC = () => {
     customer.address.includes(searchTerm)
   );
 
+  // open edit flow for employee/user
+  const handleOpenEditUser = (user: User) => {
+    setEditingUser(user);
+    setEmployeeForm({
+      username: user.username,
+      fullName: user.fullName,
+      email: user.email || '',
+      password: '', // leave blank so admin can type new one if needed
+      phone: user.phone.replace(/^\+?20/, ''),
+      role: user.role
+    });
+    setShowEditEmployee(true);
+  };
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    if (!employeeForm.username || !employeeForm.fullName || !employeeForm.phone) {
+      setError('يرجى ملء جميع الحقول المطلوبة');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:4000/api/admin/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: employeeForm.username.trim().toLowerCase(),
+          fullName: employeeForm.fullName,
+          email: employeeForm.email,
+          phone: formatPhone(employeeForm.phone),
+          password: employeeForm.password || undefined,
+          role: employeeForm.role
+        })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setSuccess('تم تحديث المستخدم بنجاح');
+        setEditingUser(null);
+        setShowEditEmployee(false);
+        setEmployeeForm({ username: '', fullName: '', email: '', password: '', phone: '', role: 'EMPLOYEE' });
+        await fetchAllData();
+      } else {
+        setError(data.error || 'فشل تحديث المستخدم');
+      }
+    } catch (err) {
+      setError('خطأ في الاتصال بالخادم');
+      console.error(err);
+    }
+  };
+
   return (
     <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
       {/* Header */}
@@ -310,22 +372,36 @@ const AdminDashboard: React.FC = () => {
                   value={employeeForm.email}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })}
                 />
-                <input
-                  type="tel"
-                  placeholder="رقم الهاتف"
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  value={employeeForm.phone}
-                  onChange={(e) => setEmployeeForm({ ...employeeForm, phone: e.target.value })}
-                  required
-                />
-                <input
-                  type="password"
-                  placeholder="كلمة المرور"
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  value={employeeForm.password}
-                  onChange={(e) => setEmployeeForm({ ...employeeForm, password: e.target.value })}
-                  required
-                />
+                                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-blue-600">+20</span>
+                  <input
+                    type="tel"
+                    placeholder="رقم الهاتف"
+                    inputMode="numeric"
+                    maxLength={11}
+                    className="pl-12 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    value={employeeForm.phone}
+                    onChange={(e) => setEmployeeForm({ ...employeeForm, phone: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="كلمة المرور"
+                    className="w-full pl-12 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    value={employeeForm.password}
+                    onChange={(e) => setEmployeeForm({ ...employeeForm, password: e.target.value })}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
               <div className="flex gap-2">
                 <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold transition-colors">
@@ -340,6 +416,75 @@ const AdminDashboard: React.FC = () => {
                 </button>
               </div>
             </form>
+          )}
+
+          {showEditEmployee && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+              <form onSubmit={handleUpdateUser} className="bg-white rounded-[2rem] w-full max-w-lg p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+                <h3 className="text-2xl font-black mb-6 text-gray-900">تعديل بيانات المستخدم</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="اسم المستخدم (Username)"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={employeeForm.username}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, username: e.target.value })}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="الاسم الرباعي"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={employeeForm.fullName}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, fullName: e.target.value })}
+                  required
+                />
+                <input
+                  type="email"
+                  placeholder="البريد الإلكتروني (اختياري)"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={employeeForm.email}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })}
+                />
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-blue-600">+20</span>
+                  <input
+                    type="tel"
+                    placeholder="رقم الهاتف"
+                    inputMode="numeric"
+                    maxLength={11}
+                    className="pl-12 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    value={employeeForm.phone}
+                    onChange={(e) => setEmployeeForm({ ...employeeForm, phone: e.target.value })}
+                    required
+                  />
+                </div>
+                <input
+                  type="password"
+                  placeholder="كلمة المرور (اتركه فارغا إذا لم ترغب بتغييرها)"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  value={employeeForm.password}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, password: e.target.value })}
+                />
+                </div>
+                <div className="flex gap-3 mt-8 pt-6 border-t">
+                  <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-black transition-colors">
+                    حفظ التعديلات
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditEmployee(false);
+                      setEditingUser(null);
+                      setEmployeeForm({ username: '', fullName: '', email: '', password: '', phone: '', role: 'EMPLOYEE' });
+                    }}
+                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-black transition-colors"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </form>
+            </div>
           )}
 
           <div className="grid gap-4">
@@ -360,8 +505,9 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => {}}
+                      onClick={() => handleOpenEditUser(user)}
                       className="bg-blue-100 hover:bg-blue-200 text-blue-600 p-2 rounded-lg transition-colors"
+                      title="تعديل المستخدم"
                     >
                       <Edit2 size={20} />
                     </button>
@@ -420,14 +566,19 @@ const AdminDashboard: React.FC = () => {
                   onChange={(e) => setCustomerForm({ ...customerForm, fullName: e.target.value })}
                   required
                 />
-                <input
-                  type="tel"
-                  placeholder="رقم الهاتف (واتس)"
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  value={customerForm.phone}
-                  onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
-                  required
-                />
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-blue-600">+20</span>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={11}
+                    placeholder="رقم الهاتف"
+                    className="pl-12 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    value={customerForm.phone}
+                    onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
+                    required
+                  />
+                </div>
                 <input
                   type="number"
                   placeholder="السن"

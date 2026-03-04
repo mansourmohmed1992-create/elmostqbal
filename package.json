@@ -7,7 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "server": "ts-node server/index.ts"
+    "server": "ts-node server/index.ts",
+    "server:dev": "nodemon --watch server --ext ts --exec \"ts-node server/index.ts\"",
+    "server:pm2": "pm2 start --name lab-server --interpreter=ts-node server/index.ts --watch",
+    "server:pm2-stop": "pm2 stop lab-server || true",
+    "server:pm2-save": "pm2 save",
+    "start-server": "node server/run.cjs",
+    "start-batch": "start run_server.bat"
   },
   "dependencies": {
     "@google/genai": "1.41.0",
@@ -30,6 +36,8 @@
     "@vitejs/plugin-react": "^5.0.0",
     "ts-node": "^10.9.2",
     "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "nodemon": "^2.0.22",
+    "pm2": "^5.2.0"
   }
 }

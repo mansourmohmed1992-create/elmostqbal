@@ -48,6 +48,13 @@ const HomeTestRequest = ({ user }: { user: any }) => {
     );
   };
 
+  const formatPhone = (input: string) => {
+    let p = input.replace(/\D/g, '');
+    if (p.startsWith('0')) p = p.slice(1);
+    if (!p.startsWith('20')) p = '20' + p;
+    return p;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -79,12 +86,13 @@ const HomeTestRequest = ({ user }: { user: any }) => {
     // حفظ في المرضى (Firebase)
     const patients = await getData('lab/patients') || [];
     const patientsArray = Array.isArray(patients) ? patients : [];
+    const normalizedPhone = formatPhone(formData.phone);
     const newPatient = {
       id: Math.random().toString(36).substr(2, 9),
       name: formData.fullName,
       age: parseInt(formData.age),
       gender: 'ذكر',
-      phone: formData.phone,
+      phone: normalizedPhone,
       createdAt: new Date().toLocaleDateString('en-CA'),
       username: username,
       password: password
@@ -129,7 +137,7 @@ const HomeTestRequest = ({ user }: { user: any }) => {
       const notif = {
         id: 'N-' + Math.random().toString(36).substr(2, 9),
         patientName: formData.fullName,
-        patientPhone: formData.phone,
+        patientPhone: normalizedPhone,
         testRequestId: testRequest.id,
         status: 'new',
         createdAt: new Date().toISOString(),
@@ -162,7 +170,13 @@ const HomeTestRequest = ({ user }: { user: any }) => {
   };
 
   const sendWhatsAppNotification = (name: string, phone: string, username: string, password: string, testRequestId: string) => {
-    const fullPhone = phone.replace(/^0/, '20');
+    const normalize = (input: string) => {
+      let p = input.replace(/\D/g, '');
+      if (p.startsWith('0')) p = p.slice(1);
+      if (!p.startsWith('20')) p = '20' + p;
+      return p;
+    };
+    const fullPhone = normalize(phone);
     const baseURL = window.location.origin;
     const message = `🏥 *مرحباً بك في معمل المستقبل* 👋%0A%0A✅ تم استقبال طلب التحليل المنزلي بنجاح%0A%0A━━━━━━━━━━━━━━━━━━━━━%0A📋 *تفاصيل طلبك*%0A━━━━━━━━━━━━━━━━━━━━━%0A%0A👤 الاسم: ${name}%0A🆔 رقم الطلب: *${testRequestId}*%0A%0A━━━━━━━━━━━━━━━━━━━━━%0A🔐 *بيانات دخول حسابك*%0A━━━━━━━━━━━━━━━━━━━━━%0A%0A📧 اسم المستخدم:%0A\`\`\`${username}\`\`\`%0A%0A🔑 كلمة المرور:%0A\`\`\`${password}\`\`\`%0A%0A━━━━━━━━━━━━━━━━━━━━━%0A🌐 *رابط البوابة:*%0A${baseURL}%0A%0A━━━━━━━━━━━━━━━━━━━━━%0A%0A⏱️ سيقوم فريقنا بالتواصل معك خلال الـ 24 ساعة القادمة لتحديد موعد الزيارة المنزلية وأخذ العينات.%0A%0A📞 في حالة استفسار: اتصل بنا على الرقم المسجل لديك%0A%0Aشكراً لاختيارك *معمل المستقبل* للتحاليل الطبية 🔬`;
     window.open(`https://wa.me/+${fullPhone}?text=${message}`, '_blank');
@@ -228,7 +242,9 @@ const HomeTestRequest = ({ user }: { user: any }) => {
                 <input
                   type="tel"
                   required
-                  placeholder="01xxxxxxxxx"
+                  inputMode="numeric"
+                  maxLength={11}
+                  placeholder="رقم الهاتف"
                   className="w-full pr-16 pl-20 py-5 bg-gray-50 border border-gray-100 rounded-[2.2rem] focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-bold text-gray-800"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
