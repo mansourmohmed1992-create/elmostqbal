@@ -1,49 +1,71 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# معمل المستقبل للتحاليل الطبية الكيميائية
 
-# معمل المستقبل - نسخة معاد تهيئتها
+نظام إدارة معمل طبي شامل مع قاعدة بيانات MongoDB ونشر على Railway.
 
-> هذه النسخة تمّ إعادة تهيئتها من الصفر؛ ستايل المظهر محفوظ، لكن
-> منطق التطبيق خفيف ويعتمد على ملفات ذاكرة محلية. قم بإضافة أو
-> استبدال التكوين بـ Firebase أو أي خدمة حسب حاجتك.
+## الميزات
+- إدارة المرضى والعملاء
+- إدارة التحاليل والاختبارات
+- لوحة تحكم للإدارة
+- إرسال رسائل WhatsApp
+- تكامل مع Gemini AI للتحليلات
+- قاعدة بيانات MongoDB Atlas للقابلية للتوسع
 
-# Run and deploy your AI Studio app
+## التشغيل محلياً
 
-This contains everything you need to run your app locally.
+### المتطلبات
+- Node.js
+- حساب MongoDB Atlas
 
-View your app in AI Studio: https://ai.studio/apps/drive/1yd-VeI7I1dP7KayxlZxJE9hmy0hnAwMi
+### الخطوات
+1. قم بتثبيت التبعيات:
+   ```bash
+   npm install
+   ```
 
-## Run Locally
+2. أنشئ ملف `.env` وأضف المتغيرات التالية:
+   ```
+   MONGODB_URI=your_mongodb_connection_string
+   GEMINI_API_KEY=your_gemini_api_key
+   VITE_GEMINI_API_KEY=your_gemini_api_key
+   PORT=4000
+   NODE_ENV=development
+   ```
 
-**Prerequisites:**  Node.js
+3. شغل الخادم:
+   ```bash
+   npm run start-server
+   ```
 
+4. شغل الواجهة الأمامية في طرفية منفصلة:
+   ```bash
+   npm run dev
+   ```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+## النشر على Railway
 
-> **Optional:** if you plan to re-enable Firebase, create a file
-> `.env.local` with your Firebase config values (see comments in
-> `services/firebaseService.ts`).
+1. اربط المستودع بـ Railway.
+2. أضف متغيرات البيئة في إعدادات Railway.
+3. سيتم النشر تلقائياً عند دفع التغييرات إلى الفرع الرئيسي.
 
-## Backend (Express)
+## API Endpoints
 
-A simple Node/Express backend lives in the `server/` folder. Data is stored
-in `server/data.json` and updated when API endpoints are hit.
+- `POST /api/login` – تسجيل الدخول
+- `GET /api/customers` – جلب العملاء
+- `POST /api/customers` – إضافة عميل جديد
+- `PUT /api/customers/:id` – تحديث عميل
+- `DELETE /api/customers/:id` – حذف عميل
+- `GET /api/tests` – جلب التحاليل
+- `POST /api/tests` – إضافة تحليل جديد
+- `PUT /api/tests/:id` – تحديث تحليل
+- `DELETE /api/tests/:id` – حذف تحليل
+- `POST /api/analyze` – تحليل باستخدام Gemini AI
 
-To start the server alongside the frontend run:
+## استكشاف الأخطاء
 
-```bash
-npm run server
-npm run dev   # in a separate terminal
-```
+### مشكلة اتصال MongoDB
+- تأكد من إضافة عنوان IP الخاص بك إلى قائمة الوصول في MongoDB Atlas.
+- تحقق من صحة سلسلة الاتصال.
 
-- `POST /api/login` – body `{email,password}` returns `{success,user,role}`
-- `GET /api/data/:key` – returns array stored under that key
-- `POST /api/data/:key` – overwrites data for that key with JSON body
-- `POST /api/users` – create a new user (admin operation)
-
-You can extend the backend or replace with any other service as needed.
-3. Run the app:
-   `npm run dev`
+### مشكلة في النشر
+- تأكد من وجود ملف `Procfile` في الجذر.
+- تحقق من متغيرات البيئة في Railway.
